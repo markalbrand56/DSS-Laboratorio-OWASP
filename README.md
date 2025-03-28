@@ -79,8 +79,8 @@
 1. **Clonar el repositorio**
 
 ```bash
-  git clone <repositorio>
-  cd <directorio>
+  git clone https://github.com/Jskenpo/LAB4_CIFRADOS_ASIMETRICOS.git
+
 ```
 
 2. **Backend (FastAPI)**
