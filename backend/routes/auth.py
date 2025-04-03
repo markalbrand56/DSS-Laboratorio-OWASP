@@ -8,10 +8,7 @@ from backend.controllers.auth import (
     register as register_controller,
 )
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["auth"],
-)
+router = APIRouter()
 
 @router.post("/login", response_model=SuccessfulLoginResponse, status_code=200)
 async def login(user: UserBase = Depends(UserBase)) -> SuccessfulLoginResponse:
