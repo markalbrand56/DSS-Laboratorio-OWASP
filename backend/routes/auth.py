@@ -16,13 +16,18 @@ async def login(user: UserBase = Depends(UserBase)) -> SuccessfulLoginResponse:
     Login endpoint to authenticate users.
 
     It returns a JWT token and the user's email if successful.
+    If its the first time the user logs in, it generates a new RSA key pair.
+    If the user already has a key pair, it does not generate a new one.
+    Keep in mind that the private key is only generated once and is not stored in the database.
+    Only the public key is stored in the database.
     """
-    u, t = login_controller(str(user.email), user.password)
+    u, t, k = login_controller(str(user.email), user.password)
 
     if u and t:
         return SuccessfulLoginResponse(
-            jwt_token=t,
             email=u,
+            jwt_token=t,
+            private_key=k,
         )
 
     raise HTTPException(
