@@ -17,6 +17,8 @@ router = APIRouter(
 async def login(user: UserBase = Depends(UserBase)) -> SuccessfulLoginResponse:
     """
     Login endpoint to authenticate users.
+
+    It returns a JWT token and the user's email if successful.
     """
     u, t = login_controller(str(user.email), user.password)
 
