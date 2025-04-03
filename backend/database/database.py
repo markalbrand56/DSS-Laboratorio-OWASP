@@ -55,6 +55,7 @@ class Database:
         except Exception as error:
             logger.error(f"Error en la operación de escritura: {error}")
             session.rollback()
+            raise  # Re-raise the exception to propagate it
         finally:
             session.close()
 

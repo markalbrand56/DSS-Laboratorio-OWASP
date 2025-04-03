@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 
-from backend.models.responses import SuccessfulLoginResponse
+from backend.models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
 from backend.models.user import UserBase
-from backend.controllers.auth import login as login_controller
+from backend.controllers.auth import (
+    login as login_controller,
+    register as register_controller,
+)
 
 router = APIRouter(
     prefix="/auth",
@@ -14,7 +18,7 @@ async def login(user: UserBase = Depends(UserBase)) -> SuccessfulLoginResponse:
     """
     Login endpoint to authenticate users.
     """
-    u, t = login_controller(user.email, user.password)
+    u, t = login_controller(str(user.email), user.password)
 
     if u and t:
         return SuccessfulLoginResponse(
@@ -33,8 +37,20 @@ async def register(user: UserBase = Depends(UserBase)):
     """
     Registration endpoint to create a new user.
     """
-    # Dummy registration logic
-    if user.email and user.password:
-        return {"message": "User registered successfully"}
-    else:
-        raise HTTPException(status_code=400, detail="Invalid data")
+    try:
+        register_controller(user.email, user.password)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail="User already exists",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error creating user: {e}",
+        )
+
+    return SuccessfulRegisterResponse(
+        email=str(user.email),
+        message="User created successfully",
+    )
