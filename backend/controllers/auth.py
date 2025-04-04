@@ -1,25 +1,13 @@
 import hashlib
-import jwt
-from datetime import datetime, timedelta
-
 from backend.database import db, User
 from backend.controllers.keys import generate_rsa_keys, generate_ecc_keys
+from backend.controllers.jwt import _generate_jwt_token
 
 SECRET_KEY = "clave_secreta_super_segura"
 
 def _hash_password(password: str) -> str:
     """Hashea la contraseña con SHA-256."""
     return hashlib.sha256(password.encode()).hexdigest()
-
-
-def _generate_jwt_token(user: User) -> str:
-    """Genera un JWT con el ID del usuario y una expiración de 1 hora."""
-    payload = {
-        "user_id": user.email,
-        "exp": datetime.now() + timedelta(hours=1),
-        "iat": datetime.now(),
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
 
 def get_user_by_email(email: str) -> User:
@@ -55,6 +43,15 @@ def login(email: str, password: str, key_type: str = "RSA") -> tuple[str, str, s
             session.commit()  # Guarda cambios en la BD
 
         return user.email, _generate_jwt_token(user), private_key  # La clave privada solo se genera una vez
+    
+
+def get_file(email: str) -> str:
+    """Obtiene el archivo asociado al usuario."""
+    with db.read() as session:
+        user = session.query(User).filter_by(email=email).first()
+        if user and user.file_path:
+            return user.file_path
+    return ""
 
 
 
