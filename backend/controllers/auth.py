@@ -54,6 +54,11 @@ def get_current_user(authorization: str = Header(...)) -> User:
     token = authorization.split(" ")[1]
     return verify_jwt(token)
 
+"""
+
+----------------------- AUTH -----------------------
+
+"""
 
 def _hash_password(password: str) -> str:
     """Hashea la contraseña con SHA-256."""
@@ -95,6 +100,7 @@ def login(email: str, password: str, key_type: str = "RSA") -> tuple[str, str, s
         return user.email, _generate_jwt_token(user), private_key  # La clave privada solo se genera una vez
     
 
+
 def get_file(email: str) -> str:
     """Obtiene el archivo asociado al usuario."""
     with db.read() as session:
@@ -102,6 +108,8 @@ def get_file(email: str) -> str:
         if user and user.file_path:
             return user.file_path
     return ""
+
+
 
 if __name__ == "__main__":
     # Test the functions
