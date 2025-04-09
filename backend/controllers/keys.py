@@ -43,3 +43,19 @@ def generate_ecc_keys():
     )
 
     return private_pem.decode(), public_pem.decode()
+
+def generate_keys():
+    """Genera un par de claves RSA y ECC y retorna ambas claves privadas y públicas."""
+    rsa_private, rsa_public = generate_rsa_keys()
+    ecc_private, ecc_public = generate_ecc_keys()
+
+    return {
+        "rsa": {
+            "private": rsa_private,
+            "public": rsa_public
+        },
+        "ecc": {
+            "private": ecc_private,
+            "public": ecc_public
+        }
+    }

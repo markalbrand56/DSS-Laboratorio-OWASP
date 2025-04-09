@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routes import auth_router
+from backend.routes import file_router  # Import the file router
 
 app = FastAPI(
     title="Cifrados: Laboratorio 4",
@@ -17,6 +18,9 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
+
+app.include_router(file_router, prefix="/file", tags=["file"])
 
 if __name__ == "__main__":
     import uvicorn
