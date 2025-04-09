@@ -6,6 +6,7 @@ from backend.models.user import UserBase
 from backend.controllers.auth import (
     login as login_controller,
     register as register_controller,
+    get_current_user,
 )
 
 router = APIRouter()
@@ -58,3 +59,7 @@ async def register(user: UserBase = Depends(UserBase)):
         email=str(user.email),
         message="User created successfully",
     )
+
+@router.get("/user")
+def read_me(user = Depends(get_current_user)):
+    return {"email": user.email, "public_key": user.public_key}

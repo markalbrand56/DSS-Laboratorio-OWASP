@@ -1,9 +1,59 @@
 import hashlib
 from backend.database import db, User
 from backend.controllers.keys import generate_rsa_keys, generate_ecc_keys
-from backend.controllers.jwt import _generate_jwt_token
+import jwt
+from jwt.exceptions import ExpiredSignatureError, DecodeError
+from fastapi import HTTPException, Header, Depends
 
 SECRET_KEY = "clave_secreta_super_segura"
+
+
+"""
+----------------------- JWT -----------------------
+
+"""
+SECRET_KEY = "clave_secreta_super_segura"
+
+from datetime import datetime, timedelta, timezone
+
+def _generate_jwt_token(user: User) -> str:
+    """Genera un JWT con el ID del usuario y una expiración de 1 hora."""
+    now = datetime.now(timezone.utc)  # <-- UTC explícito
+    payload = {
+        "user_id": user.email,
+        "exp": int((now + timedelta(hours=1)).timestamp()),
+        "iat": int(now.timestamp()),
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+def verify_jwt(token: str) -> User:
+    """Verifica el JWT y devuelve el usuario asociado."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        email = payload.get("user_id")
+
+        if not email:
+            raise HTTPException(status_code=401, detail="Token inválido: sin usuario")
+
+        user = get_user_by_email(email)
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+
+        return user
+
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except DecodeError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+
+def get_current_user(authorization: str = Header(...)) -> User:
+    """Obtiene el usuario actual a partir del JWT en el encabezado de autorización."""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=400, detail="Formato de autorización inválido")
+    token = authorization.split(" ")[1]
+    return verify_jwt(token)
+
 
 def _hash_password(password: str) -> str:
     """Hashea la contraseña con SHA-256."""
@@ -52,10 +102,6 @@ def get_file(email: str) -> str:
         if user and user.file_path:
             return user.file_path
     return ""
-
-
-
-
 
 if __name__ == "__main__":
     # Test the functions
