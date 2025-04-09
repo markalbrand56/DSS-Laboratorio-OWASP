@@ -81,33 +81,18 @@ def register(email: str, password: str) -> User:
         return user
 
 
-def login(email: str, password: str, key_type: str = "RSA") -> tuple[str, str, str]:
-    """Inicia sesión y genera un par de claves si el usuario no tiene una."""
-    with db.write() as session:  # Abre sesión de escritura desde el inicio
+def login(email: str, password: str) -> tuple[str, str]:
+    """Inicia sesión y devuelve email + token si las credenciales son válidas."""
+
+    with db.write() as session:
         user = session.query(User).filter_by(email=email).first()
 
         if not user or user.password != _hash_password(password):
-            return "", "", ""
+            return "", ""
 
-        private_key = ""
-        if not user.public_key:
-            private_key, public_key = (
-                generate_rsa_keys() if key_type == "RSA" else generate_ecc_keys()
-            )
-            user.public_key = public_key  # Ahora está vinculado a la sesión activa
-            session.commit()  # Guarda cambios en la BD
+        token = _generate_jwt_token(user)
+        return user.email, token
 
-        return user.email, _generate_jwt_token(user), private_key  # La clave privada solo se genera una vez
-    
-
-
-def get_file(email: str) -> str:
-    """Obtiene el archivo asociado al usuario."""
-    with db.read() as session:
-        user = session.query(User).filter_by(email=email).first()
-        if user and user.file_path:
-            return user.file_path
-    return ""
 
 
 
