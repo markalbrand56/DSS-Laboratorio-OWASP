@@ -27,7 +27,7 @@ export async function uploadFile(file, signed = false, method = null, privateKey
 
 // Descargar un archivo
 export async function downloadFile(userEmail, filename) {
-    const response = await fetch(`${API_BASE_URL}/archivos/${userEmail}/${filename}/descargar`, {
+    const response = await fetch(`${API_BASE_URL}/file/archivos/${userEmail}/${filename}/descargar`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
