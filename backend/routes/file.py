@@ -175,33 +175,52 @@ async def verificar_autenticidad(
         content = await file.read()
         f.write(content)
 
-    # Buscar el usuario en la base de datos
-    with db.read() as session:
-        user = session.query(User).filter_by(email=user_email).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # Buscar el directorio del usuario
+    user_dir = BASE_DIR / user_email
+    if not user_dir.exists():
+        raise HTTPException(status_code=404, detail="Directorio del usuario no encontrado")
 
-    # Verificar si el archivo está firmado
-    signature_path = temp_file_path.with_suffix(temp_file_path.suffix + ".sig")
+    # Buscar si el archivo tiene una firma asociada
+    signature_path = user_dir / (file.filename + ".rsa.sig")  # Firma RSA
+    ecc_signature_path = user_dir / (file.filename + ".ecc.sig")  # Firma ECC
+    file_hash_path = user_dir / (file.filename + ".hash")  # Hash del archivo
 
-    if signature_path.exists():
-        # Si la firma existe, verificarla según el algoritmo
-        if algorithm == "rsa" and user.public_key_RSA:
+    # Verificar si el archivo tiene una firma
+    if signature_path.exists() or ecc_signature_path.exists():
+        if algorithm == "rsa" and signature_path.exists():
+            # Verificar firma RSA
             if verify_signature(str(temp_file_path), public_key, signature_path.read_bytes(), "rsa"):
                 return {"message": "Archivo verificado con éxito usando RSA."}
             else:
                 raise HTTPException(status_code=400, detail="La firma RSA no es válida.")
-        elif algorithm == "ecc" and user.public_key_ECC:
-            if verify_signature(str(temp_file_path), public_key, signature_path.read_bytes(), "ecc"):
+        elif algorithm == "ecc" and ecc_signature_path.exists():
+            # Verificar firma ECC
+            if verify_signature(str(temp_file_path), public_key, ecc_signature_path.read_bytes(), "ecc"):
                 return {"message": "Archivo verificado con éxito usando ECC."}
             else:
                 raise HTTPException(status_code=400, detail="La firma ECC no es válida.")
         else:
             raise HTTPException(status_code=400, detail="Algoritmo de firma no válido o no disponible.")
 
-    # Si el archivo no está firmado, simplemente verificar la integridad con la clave pública
-    else:
-        # Aquí se puede hacer alguna verificación de integridad, como un hash del archivo
-        return {"message": "El archivo no está firmado, pero su integridad puede verificarse."}
+    # Si el archivo no tiene firma, verificar la integridad usando el hash
+    if file_hash_path.exists():
+        with open(file_hash_path, "r") as f:
+            stored_hash = f.read().strip()
 
-    raise HTTPException(status_code=400, detail="No se pudo verificar el archivo.")
+        # Calcular el hash del archivo
+        import hashlib
+        file_hash = hashlib.sha256()
+        with open(temp_file_path, "rb") as f:
+            while chunk := f.read(4096):
+                file_hash.update(chunk)
+
+        calculated_hash = file_hash.hexdigest()
+
+        # Verificar la integridad
+        if stored_hash == calculated_hash:
+            return {"message": "El archivo no está firmado, pero su integridad ha sido verificada con éxito."}
+        else:
+            raise HTTPException(status_code=400, detail="La integridad del archivo no coincide con el hash almacenado.")
+
+    raise HTTPException(status_code=400,
+                        detail="Archivo no firmado y sin hash disponible para verificar su integridad.")
