@@ -14,8 +14,11 @@
     </div>
 
     <div class="input-group">
-      <label for="method">📝 Method (optional)</label>
-      <input id="method" type="text" v-model="method" placeholder="Method" />
+      <label for="method">⚙️ Method</label>
+      <select id="method" v-model="method">
+        <option value="rsa">RSA</option>
+        <option value="ecc">ECC</option>
+      </select>
     </div>
 
     <div class="input-group">
@@ -45,7 +48,7 @@ const emit = defineEmits(['upload'])
 const file = ref(null)
 const privateKey = ref('')
 const signed = ref(false)
-const method = ref('')
+const method = ref('rsa')
 
 const onFileChange = (e) => {
   file.value = e.target.files[0]
@@ -98,7 +101,7 @@ const onUpload = () => {
   margin-bottom: 0.5rem;
 }
 
-input[type="file"], input[type="text"] {
+input[type="file"], input[type="text"], select {
   padding: 0.5rem;
   width: 100%;
   border: 1px solid #ccc;
