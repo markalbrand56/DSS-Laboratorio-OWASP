@@ -23,7 +23,7 @@ const email = ref('')
 
 const onDownload = () => {
   if (!filename.value) return
-  emit('download', email.value, filename.value)
+  emit('download', { email: email.value, fileId: filename.value });
 }
 </script>
 

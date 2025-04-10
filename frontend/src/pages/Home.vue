@@ -33,15 +33,13 @@
 
       <!-- Metadata -->
       <div class="card" v-if="fileMetadata">
-        <h2>File Metadata</h2>
-        <p><strong>Methods of Signature:</strong> {{ fileMetadata.metodos_firma.join(', ') }}</p>
-        <div v-if="fileMetadata.llaves_publicas">
-          <div v-for="(key, method) in fileMetadata.llaves_publicas" :key="method">
-            <h3>{{ method.toUpperCase() }} Public Key</h3>
-            <pre>{{ key }}</pre>
-            <button @click="downloadKey(key, `${method}_public_key.pem`)">Download Public Key</button>
-          </div>
-        </div>
+        <FileMetadata
+          :filename="fileMetadata.filename"
+          :email="fileMetadata.email"
+          :size="fileMetadata.size"
+          :signature="fileMetadata.signature"
+          :algorithm="fileMetadata.algorithm"
+        />
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -68,6 +66,7 @@ import FileUpload from "../components/FileUpload.vue";
 import FileDownload from "../components/FileDownload.vue";
 import VerifySignature from "../components/VerifySignature.vue";
 import AllFiles from "../components/AllFiles.vue";
+import FileMetadata from "../components/FileMetadata.vue";
 
 // Router y usuario
 const router = useRouter()
@@ -158,7 +157,7 @@ const uploadFiles = async () => {
 }
 
 // Descargar archivo
-const downloadFiles = async ({ fileId, email }) => {
+const downloadFiles = async ({ email, fileId }) => {
   fileIdToDownload.value = fileId
   fileEmailToDownload.value = email
 
