@@ -32,7 +32,7 @@
             <input type="checkbox" v-model="signed" /> Sign the file
           </label>
           <input type="text" v-model="method" placeholder="Method (optional)" />
-          <input type="text" v-model="privateKey" placeholder="Private Key (optional)" />
+          <input type="file" @change="handlePrivateKeyUpload" />
           <button @click="uploadFiles" :disabled="loadingUpload">
             {{ loadingUpload ? 'Uploading...' : 'Upload File' }}
           </button>
@@ -131,6 +131,21 @@ const generateNewKeys = async () => {
   }
 }
 
+const privateKeyFile = ref(null);
+
+// Función para manejar la carga de la clave privada
+const handlePrivateKeyUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      privateKey.value = e.target.result; // Asigna el contenido del archivo al modelo `privateKey`
+    };
+    reader.readAsText(file);
+  }
+};
+
+
 // Función para manejar el archivo subido
 const handleFileUpload = (event) => {
   fileToUpload.value = event.target.files[0]
@@ -139,22 +154,29 @@ const handleFileUpload = (event) => {
 // Función para subir el archivo
 const uploadFiles = async () => {
   if (!fileToUpload.value) {
-    error.value = 'Please select a file to upload.'
-    return
+    error.value = 'Please select a file to upload.';
+    return;
   }
 
-  loadingUpload.value = true
+  loadingUpload.value = true;
+  error.value = null;
+  success.value = false;
 
   try {
-    await uploadFile(fileToUpload.value, signed.value, method.value, privateKey.value)
-    // Aquí puedes manejar el éxito, por ejemplo, mostrando un mensaje o limpiando el formulario
+    await uploadFile(fileToUpload.value, signed.value, method.value, privateKey.value);
+    success.value = 'File uploaded successfully!';
+    // Limpiar campos después de la subida
+    fileToUpload.value = null;
+    privateKey.value = '';
+    signed.value = false;
+    method.value = '';
   } catch (err) {
-    // Manejo de error
-    console.error('Error uploading file:', err.message)
+    error.value = err.message;
   } finally {
-    loadingUpload.value = false
+    loadingUpload.value = false;
   }
-}
+};
+
 
 // Función para descargar el archivo
 const downloadFiles = async () => {
