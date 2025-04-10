@@ -39,7 +39,8 @@ async def save_user_file(
         with open(file_path, "rb") as f:
             file_data = f.read()
 
-        hash_path = save_hash(file_data, str(file_path))
+        #Generar el hash del archivo
+        hash_path = save_hash(file_data, str(file_path), method) if method else save_hash(file_data, str(file_path))
 
         response = {
             "message": "Archivo subido exitosamente",
