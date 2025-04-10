@@ -6,7 +6,7 @@ export async function uploadFile(file, signed = false) {
     formData.append('file', file)
     formData.append('signed', signed)
 
-    const response = await fetch(`${API_BASE_URL}/files/upload`, {
+    const response = await fetch(`${API_BASE_URL}/file/upload`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
@@ -24,7 +24,7 @@ export async function uploadFile(file, signed = false) {
 
 // Descargar un archivo
 export async function downloadFile(fileId) {
-    const response = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
+    const response = await fetch(`${API_BASE_URL}/file/${fileId}/download`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
@@ -45,7 +45,7 @@ export async function downloadFile(fileId) {
 
 // Validar la firma de un archivo
 export async function validateFileSignature(fileId) {
-    const response = await fetch(`${API_BASE_URL}/files/${fileId}/validate-signature`, {
+    const response = await fetch(`${API_BASE_URL}/file/${fileId}/validate-signature`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
