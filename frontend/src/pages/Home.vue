@@ -6,9 +6,12 @@
     </nav>
 
     <main>
-      <h1>Welcome!</h1>
-      <p>You are logged in as <strong>{{ email }}</strong></p>
-      <p>The first 15 characters of the JWT are {{ token }}</p>
+      <div class="card">
+        <h1>Welcome!</h1>
+        <p>You are logged in as <strong>{{ email }}</strong></p>
+        <p>The first 15 characters of your JWT are:</p>
+        <code class="jwt-preview">{{ token }}</code>
+      </div>
     </main>
   </div>
 </template>
@@ -25,12 +28,11 @@ onMounted(() => {
   const storedToken = sessionStorage.getItem('jwt_token')
   const storedEmail = sessionStorage.getItem('email')
 
-
-  if (!token || !storedEmail) {
+  if (!storedToken || !storedEmail) {
     router.push('/login')
   } else {
     email.value = storedEmail
-    token.value = storedToken.slice(0, 15) // Get the first 15 characters of the JWT
+    token.value = storedToken.slice(0, 15)
   }
 })
 
@@ -42,21 +44,25 @@ const logout = () => {
 
 <style scoped>
 .home-page {
-  padding: 1rem;
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #333;
+  background: #3f51b5;
   color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.navbar .logo {
-  font-weight: bold;
+.logo {
+  font-weight: 600;
+  font-size: 1.2rem;
 }
 
 .navbar button {
@@ -64,8 +70,10 @@ const logout = () => {
   color: white;
   border: none;
   padding: 0.5rem 1rem;
+  font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.3s;
 }
 
 .navbar button:hover {
@@ -73,7 +81,34 @@ const logout = () => {
 }
 
 main {
-  margin-top: 2rem;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.card {
+  background: white;
+  padding: 2rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
   text-align: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+  color: #3f51b5;
+}
+
+.jwt-preview {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #eee;
+  border-radius: 6px;
+  font-family: monospace;
+  color: #333;
 }
 </style>
