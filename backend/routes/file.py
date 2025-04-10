@@ -123,11 +123,12 @@ async def obtener_metadata(
         "llaves_publicas": public_keys
     }
 
-async def verify_signature(file_path: str, public_key: str, signature: bytes, algorithm: str) -> bool:
+def verify_signature(file_path: str, public_key: str, signature: bytes, algorithm: str) -> bool:
     """
     Verifica la firma de un archivo con la clave pública proporcionada.
     Dependiendo del algoritmo de firma, puede ser RSA o ECC.
     """
+    print(public_key)
     try:
         with open(file_path, "rb") as f:
             file_data = f.read()
@@ -139,7 +140,10 @@ async def verify_signature(file_path: str, public_key: str, signature: bytes, al
             public_key.verify(
                 signature,
                 file_data,
-                padding.PKCS1v15(),
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
                 hashes.SHA256()
             )
         elif algorithm == "ecc":
