@@ -1,11 +1,16 @@
 <template>
   <div class="card">
-    <h2>Verify Signature</h2>
-    <p>Upload the file, public key, and signature to verify the authenticity.</p>
+    <h2>Verify File Authenticity</h2>
+    <p>Upload the file, public key, and provide your email to verify the authenticity of the file.</p>
 
     <div class="input-group">
       <label for="file">📄 File</label>
       <input id="file" type="file" @change="onFileChange" />
+    </div>
+
+    <div class="input-group">
+      <label for="userEmail">📧 User Email</label>
+      <input id="userEmail" type="email" v-model="userEmail" placeholder="Enter your email" />
     </div>
 
     <div class="input-group">
@@ -14,14 +19,17 @@
     </div>
 
     <div class="input-group">
-      <label for="signature">🖋️ Signature</label>
-      <input id="signature" type="file" @change="onSignatureChange" />
+      <label for="algorithm">⚙️ Algorithm</label>
+      <select id="algorithm" v-model="algorithm">
+        <option value="rsa">RSA</option>
+        <option value="ecc">ECC</option>
+      </select>
     </div>
 
     <button
         class="verify-button"
         @click="onVerify"
-        :disabled="loading || !file || !publicKey || !signature"
+        :disabled="loading || !file || !publicKey || !userEmail || !algorithm"
     >
       {{ loading ? 'Verifying...' : 'Verify Signature' }}
     </button>
@@ -39,7 +47,8 @@ const emit = defineEmits(['verify'])
 
 const file = ref(null)
 const publicKey = ref('')
-const signature = ref('')
+const userEmail = ref('')
+const algorithm = ref('rsa')
 
 const onFileChange = (e) => {
   file.value = e.target.files[0]
@@ -53,19 +62,12 @@ const onPublicKeyChange = (e) => {
   reader.readAsText(e.target.files[0])
 }
 
-const onSignatureChange = (e) => {
-  const reader = new FileReader()
-  reader.onload = (event) => {
-    signature.value = event.target.result
-  }
-  reader.readAsText(e.target.files[0])
-}
-
 const onVerify = () => {
   emit('verify', {
     file: file.value,
     publicKey: publicKey.value,
-    signature: signature.value
+    userEmail: userEmail.value,
+    algorithm: algorithm.value
   })
 }
 </script>
@@ -96,7 +98,7 @@ const onVerify = () => {
   margin-bottom: 0.5rem;
 }
 
-input[type="file"] {
+input[type="file"], input[type="email"], select {
   padding: 0.5rem;
   width: 100%;
   border: 1px solid #ccc;
