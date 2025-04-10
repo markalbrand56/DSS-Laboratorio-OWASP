@@ -1,11 +1,6 @@
 <!-- src/App.vue -->
 <!-- Puedes poner esto en App.vue o crear un componente de navegación -->
 <template>
-  <nav>
-    <router-link to="/login">Login</router-link> |
-    <router-link to="/register">Register</router-link> |
-    <router-link to="/home">Home</router-link>
-  </nav>
   <router-view />
 </template>
 
@@ -13,4 +8,11 @@
 </script>
 
 <style>
+body {
+  font-family: Arial, sans-serif;
+  font-size: large;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
 </style>
