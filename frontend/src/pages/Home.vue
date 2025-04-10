@@ -7,12 +7,7 @@
 
     <main>
       <!-- Card Welcome -->
-      <div class="card welcome-card">
-        <h1>Welcome!</h1>
-        <p>You are logged in as <strong>{{ email }}</strong></p>
-        <p>The first 15 characters of your JWT are:</p>
-        <code class="jwt-preview">{{ token }}</code>
-      </div>
+      <Welcome :email="email" :token="token" />
 
       <!-- Grouped Cards (Generate Keys, Upload, Download, Validate, Files) -->
       <div class="card-group">
@@ -116,6 +111,7 @@ import {
   getFileMetadata,
 } from '../api/files'
 import { generateKeys } from '../api/auth'
+import Welcome from "../components/Welcome.vue";
 
 const router = useRouter() // Manejo de rutas
 const email = ref('') // Email del usuario guardado en el sessionStorage
