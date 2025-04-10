@@ -32,3 +32,21 @@ export async function register(email, password) {
 
     return await response.json()
 }
+
+// Función para generar llaves RSA y ECC
+export async function generateKeys() {
+    const response = await fetch(`${API_BASE_URL}/auth/generate-keys`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
+            'Content-Type': 'application/json',
+        },
+    })
+
+    if (!response.ok) {
+        const err = await response.text()
+        throw new Error(err || 'Key generation failed')
+    }
+
+    return await response.json()
+}
