@@ -17,6 +17,10 @@ async def upload_file(
     private_key: str = Form(None),
     user=Depends(get_current_user)
 ):
+
+    """Sube un archivo a la carpeta del usuario.
+    Si se especifica el método y la clave privada, firma el archivo.
+    """
     result = await save_user_file(
         file=file,
         user_email=user.email,
@@ -63,19 +67,6 @@ async def get_all_user_files(
         raise HTTPException(status_code=500, detail=f"Error al obtener archivos: {e}")
 
 
-@router.get("/archivos/{user_email}/{filename}/descargar")
-async def descargar_archivo(
-    user_email: str,
-    filename: str,
-    current_user = Depends(get_current_user)
-):
-    file_path = BASE_DIR / user_email / filename
-
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Archivo no encontrado")
-
-    return FileResponse(path=str(file_path), filename=filename, media_type="application/octet-stream")
-
 @router.get("/archivos/{user_email}/{filename}/metadata")
 async def obtener_metadata(
     user_email: str,
@@ -95,17 +86,18 @@ async def obtener_metadata(
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+        metodo_firma = []
+        public_keys = {}
+
         if rsa_signature.exists() and user.public_key_RSA:
-            metodo = "rsa"
-            public_key = user.public_key_RSA
-        elif ecc_signature.exists() and user.public_key_ECC:
-            metodo = "ecc"
-            public_key = user.public_key_ECC
-        else:
-            metodo = None
-            public_key = None
+            metodo_firma.append("rsa")
+            public_keys["rsa"] = user.public_key_RSA
+
+        if ecc_signature.exists() and user.public_key_ECC:
+            metodo_firma.append("ecc")
+            public_keys["ecc"] = user.public_key_ECC
 
     return {
-        "metodo_firma": metodo,
-        "llave_publica": public_key
+        "metodos_firma": metodo_firma,
+        "llaves_publicas": public_keys
     }
