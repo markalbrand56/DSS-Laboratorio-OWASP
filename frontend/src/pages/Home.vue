@@ -32,15 +32,7 @@
       </div>
 
       <!-- Metadata -->
-      <div class="card" v-if="fileMetadata">
-        <FileMetadata
-          :filename="fileMetadata.filename"
-          :email="fileMetadata.email"
-          :size="fileMetadata.size"
-          :signature="fileMetadata.signature"
-          :algorithm="fileMetadata.algorithm"
-        />
-      </div>
+      <FileMetadata :metadata="fileMetadata" />
 
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">Operation completed successfully!</p>
