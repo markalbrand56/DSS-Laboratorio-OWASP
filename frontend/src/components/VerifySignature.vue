@@ -63,10 +63,16 @@ const onPublicKeyChange = (e) => {
 }
 
 const onVerify = () => {
+  console.log('emiting', {
+    file: file.value,
+    userEmail: userEmail.value,
+    publicKey: publicKey.value,
+    algorithm: algorithm.value
+  })
   emit('verify', {
     file: file.value,
+    email: userEmail.value,
     publicKey: publicKey.value,
-    userEmail: userEmail.value,
     algorithm: algorithm.value
   })
 }

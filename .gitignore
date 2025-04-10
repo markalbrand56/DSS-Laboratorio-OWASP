@@ -2,6 +2,7 @@
 *.db
 /backend/FileSection
 */.vite
+*/temp
 
 ### react template
 .DS_*
