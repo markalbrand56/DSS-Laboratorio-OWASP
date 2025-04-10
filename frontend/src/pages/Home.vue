@@ -41,32 +41,50 @@
         <!-- Card Download File -->
         <div class="card">
           <h2>Download File</h2>
+          <input v-model="fileEmailToDownload" type="text" placeholder="Enter email" />
           <input v-model="fileIdToDownload" type="text" placeholder="Enter file ID" />
           <button @click="downloadFiles">Download File</button>
         </div>
 
-        <!-- Card Validate Signature -->
+        <!-- Card Verificar Firma -->
         <div class="card">
-          <h2>Validate File Signature</h2>
-          <input v-model="fileIdToValidate" type="text" placeholder="Enter file ID" />
-          <button @click="validateSignature">Validate Signature</button>
+          <h2>Verificar Firma de Archivo</h2>
+          <input type="file" @change="handleFileVerification" />
+          <input v-model="verificationEmail" type="email" placeholder="Correo del propietario" />
+          <input v-model="publicKey" type="text" placeholder="Clave pública" />
+          <select v-model="algorithm">
+            <option value="rsa">RSA</option>
+            <option value="ecc">ECC</option>
+          </select>
+          <button @click="verifyFileSignature" :disabled="loadingVerification">
+            {{ loadingVerification ? 'Verificando...' : 'Verificar Firma' }}
+          </button>
+          <p v-if="errorVerification" class="error">{{ errorVerification }}</p>
+          <p v-if="successVerification" class="success">{{ successVerification }}</p>
         </div>
+
 
         <!-- Card List User Files -->
         <div class="card">
-          <h2>Your Files</h2>
+          <h2>All Files</h2>
           <div v-if="userFiles.length">
             <ul>
-              <li v-for="file in userFiles" :key="file">
-                {{ file }}
+              <li v-for="(userFilesList, index) in userFiles" :key="index">
+                <strong>User: {{ userFilesList.user }}</strong>
+                <ul>
+                  <li v-for="file in userFilesList.files" :key="file">
+                    {{ file }}
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
           <div v-else>
-            <p>No files uploaded yet.</p>
+            <p>No files available.</p>
           </div>
         </div>
       </div>
+
 
       <!-- Card File Metadata -->
       <div class="card" v-if="fileMetadata">
@@ -106,6 +124,7 @@ const token = ref('') // Token JWT del usuario guardado en el sessionStorage
 
 const fileToUpload = ref(null) // Archivo a subir
 const fileIdToDownload = ref('') // ID del archivo a descargar
+const fileEmailToDownload = ref('') // Email del usuario que subió el archivo
 const fileIdToValidate = ref('') // ID del archivo a validar
 const userFiles = ref([]) // Lista de archivos del usuario
 const fileMetadata = ref(null) // Metadata del archivo (método de firma y clave pública)
@@ -143,7 +162,7 @@ const logout = () => {
 // Función para obtener metadatos del archivo
 const fetchFileMetadata = async (filename) => {
   try {
-    fileMetadata.value = await getFileMetadata(email.value, filename)
+    fileMetadata.value = await getFileMetadata(fileEmailToDownload.value, filename)
   } catch (err) {
     error.value = err.message
   }
@@ -230,11 +249,11 @@ const downloadFiles = async () => {
   if (!fileIdToDownload.value) return
 
   try {
-    await downloadFile(email.value, fileIdToDownload.value)
-    success.value = true
+    await downloadFile(fileEmailToDownload.value, fileIdToDownload.value)
     // Metadata del archivo
     await fetchFileMetadata(fileIdToDownload.value)
 
+    success.value = true
   } catch (err) {
     error.value = err.message
   }
@@ -255,9 +274,9 @@ const validateSignature = async () => {
 // Función para obtener los archivos del usuario
 const fetchUserFiles = async () => {
   try {
-    const listFiles = await getUserFiles()
+    const listFiles = await getUserFiles() // Esta función debe devolver todos los archivos de todos los usuarios
     console.log('listFiles', listFiles)
-    userFiles.value = listFiles.find(user => user.user === email.value).files
+    userFiles.value = listFiles // Ya no filtramos solo por el email, ahora mostramos todos los archivos
   } catch (err) {
     error.value = err.message
   }
