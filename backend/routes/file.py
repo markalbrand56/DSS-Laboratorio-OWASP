@@ -101,13 +101,14 @@ async def obtener_metadata(
     rsa_signature = file_path.with_suffix(file_path.suffix + ".rsa.sig")
     ecc_signature = file_path.with_suffix(file_path.suffix + ".ecc.sig")
 
+    metodo_firma = []
+    public_keys = {}
+
     with db.read() as session:
         user = session.query(User).filter_by(email=user_email).first()
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        metodo_firma = []
-        public_keys = {}
 
         if rsa_signature.exists() and user.public_key_RSA:
             metodo_firma.append("rsa")
