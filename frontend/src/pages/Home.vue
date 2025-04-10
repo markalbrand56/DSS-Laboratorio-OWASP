@@ -12,7 +12,7 @@
       <!-- Grouped Cards (Generate Keys, Upload, Download, Validate, Files) -->
       <div class="card-group">
         <!-- Card Generate Keys -->
-        <GenerateKeys />
+        <GenerateKeys :loading="loading" @generate="generateNewKeys" />
 
         <!-- Card Upload File -->
         <FileUpload
@@ -30,29 +30,10 @@
 
         <VerifySignature :loading="loadingVerify" @verify="verifySignature" />
 
-        <!-- Card List User Files -->
-        <div class="card">
-          <h2>All Files</h2>
-          <div v-if="userFiles.length">
-            <ul>
-              <li v-for="(userFilesList, index) in userFiles" :key="index">
-                <strong>User: {{ userFilesList.user }}</strong>
-                <ul>
-                  <li v-for="file in userFilesList.files" :key="file">
-                    {{ file }}
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-          <div v-else>
-            <p>No files available.</p>
-          </div>
-        </div>
+        <AllFiles :files="userFiles" :loading="loadingFiles" @refresh="fetchUserFiles" />
       </div>
 
-
-      <!-- Card File Metadata -->
+        <!-- Card File Metadata -->
       <div class="card" v-if="fileMetadata">
         <h2>File Metadata</h2>
         <p><strong>Methods of Signature:</strong> {{ fileMetadata.metodos_firma.join(', ') }}</p>
@@ -73,21 +54,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import {
-  uploadFile,
-  downloadFile,
-  verifyFileSignature,
-  getUserFiles,
-  getFileMetadata,
-} from '../api/files'
-import { generateKeys } from '../api/auth'
+import {onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {downloadFile, getFileMetadata, getUserFiles, uploadFile, verifyFileSignature,} from '../api/files'
+import {generateKeys} from '../api/auth'
 import Welcome from "../components/Welcome.vue";
 import GenerateKeys from "../components/GenerateKeys.vue";
 import FileUpload from "../components/FileUpload.vue";
 import FileDownload from "../components/FileDownload.vue";
 import VerifySignature from "../components/VerifySignature.vue";
+import AllFiles from "../components/AllFiles.vue";
 
 const router = useRouter() // Manejo de rutas
 const email = ref('') // Email del usuario guardado en el sessionStorage
@@ -118,6 +94,11 @@ const fileVerification = ref(null) // Archivo a verificar
 const loadingVerification = ref(false) // Estado de carga para la verificación de la firma
 const errorVerification = ref(null) // Mensaje de error en la verificación de la firma
 const successVerification = ref('') // Mensaje de éxito en la verificación
+const loadingFiles = ref(false)
+const loadingDownload = ref(false) // Estado de carga para la descarga de archivos
+const loadingVerify = ref(false) // Estado de carga para la verificación de la firma
+
+
 
 onMounted(() => {
   // Verificamos si el usuario está autenticado
@@ -280,14 +261,16 @@ const validateSignature = async () => {
 
 // Función para obtener los archivos del usuario
 const fetchUserFiles = async () => {
+  loadingFiles.value = true
   try {
-    const listFiles = await getUserFiles() // Esta función debe devolver todos los archivos de todos los usuarios
-    console.log('listFiles', listFiles)
-    userFiles.value = listFiles // Ya no filtramos solo por el email, ahora mostramos todos los archivos
+    userFiles.value = await getUserFiles()
   } catch (err) {
     error.value = err.message
+  } finally {
+    loadingFiles.value = false
   }
 }
+
 </script>
 
 <style scoped>

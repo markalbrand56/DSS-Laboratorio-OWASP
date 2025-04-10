@@ -1,6 +1,7 @@
 <template>
   <div class="card">
     <h2>Download File</h2>
+    <input type="text" v-model="email" placeholder="Enter email" />
     <input type="text" v-model="filename" placeholder="Enter filename" />
     <button @click="onDownload" :disabled="loading || !filename">
       {{ loading ? 'Downloading...' : 'Download' }}
@@ -18,10 +19,11 @@ defineProps({
 const emit = defineEmits(['download'])
 
 const filename = ref('')
+const email = ref('')
 
 const onDownload = () => {
   if (!filename.value) return
-  emit('download', filename.value)
+  emit('download', email.value, filename.value)
 }
 </script>
 
