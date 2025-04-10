@@ -29,13 +29,13 @@
         <VerifySignature :loading="loadingVerify" @verify="verifySignature" />
 
         <AllFiles :files="userFiles" :loading="loadingFiles" @refresh="fetchUserFiles" />
+        <!-- Metadata -->
+        <FileMetadata :metadata="fileMetadata" />
+
       </div>
 
-      <!-- Metadata -->
-      <FileMetadata :metadata="fileMetadata" />
-
       <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="success" class="success">Operation completed successfully!</p>
+      <p v-if="success" class="success">Operation completed successfully! {{ success }}</p>
     </main>
   </div>
 </template>
