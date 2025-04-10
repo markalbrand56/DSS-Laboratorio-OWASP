@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from backend.models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
-from backend.models.user import UserBase
+from backend.models.user import UserBase, LoginRequest
 from backend.database import db, User
 from backend.controllers.auth import (
     login as login_controller,
@@ -14,13 +14,13 @@ from backend.controllers.keys import generate_rsa_keys, generate_ecc_keys
 router = APIRouter()
 
 @router.post("/login", response_model=SuccessfulLoginResponse, status_code=200)
-async def login(email: str, password: str) -> SuccessfulLoginResponse:
+async def login(login_request: LoginRequest) -> SuccessfulLoginResponse:
     """
     Login endpoint to authenticate users using query parameters.
 
     It returns a JWT token and the user's email if successful.
     """
-    u, t = login_controller(email, password)
+    u, t = login_controller(login_request.email, login_request.password)
 
     if u and t:
         return SuccessfulLoginResponse(
@@ -33,8 +33,8 @@ async def login(email: str, password: str) -> SuccessfulLoginResponse:
         detail="Invalid credentials",
     )
 
-@router.post("/register")
-async def register(user: UserBase = Depends(UserBase)):
+@router.post("/register", response_model=SuccessfulRegisterResponse, status_code=201)
+async def register(user: LoginRequest) -> SuccessfulRegisterResponse:
     """
     Registration endpoint to create a new user.
     """

@@ -51,7 +51,7 @@ async def save_user_file(
         if sign:
             if not method or not private_key:
                 raise HTTPException(status_code=400, detail="Se requiere método de firma y clave privada si sign=True.")
-
+            print("private_key\n", private_key)
             # 🔧 Limpiar y cargar la clave privada
             try:
                 cleaned_key = private_key.replace("\\n", "\n").encode()
