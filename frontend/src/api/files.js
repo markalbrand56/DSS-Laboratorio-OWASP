@@ -80,3 +80,20 @@ export async function getUserFiles() {
 
     return await response.json();
 }
+
+// Obtener metadatos del archivo
+export async function getFileMetadata(userEmail, filename) {
+    const response = await fetch(`${API_BASE_URL}/file/archivos/${userEmail}/${filename}/metadata`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
+        },
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || 'Failed to fetch file metadata');
+    }
+
+    return await response.json();
+}

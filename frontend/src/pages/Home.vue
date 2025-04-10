@@ -68,6 +68,19 @@
         </div>
       </div>
 
+      <!-- Card File Metadata -->
+      <div class="card" v-if="fileMetadata">
+        <h2>File Metadata</h2>
+        <p><strong>Methods of Signature:</strong> {{ fileMetadata.metodos_firma.join(', ') }}</p>
+        <div v-if="fileMetadata.llaves_publicas">
+          <div v-for="(key, method) in fileMetadata.llaves_publicas" :key="method">
+            <h3>{{ method.toUpperCase() }} Public Key</h3>
+            <pre>{{ key }}</pre>
+            <button @click="downloadPublicKey(key, method)">Download Public Key</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Error and Success Messages -->
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">Operation completed successfully!</p>
@@ -78,7 +91,13 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { uploadFile, downloadFile, validateFileSignature, getUserFiles } from '../api/files'
+import {
+  uploadFile,
+  downloadFile,
+  validateFileSignature,
+  getUserFiles,
+  getFileMetadata,
+} from '../api/files'
 import { generateKeys } from '../api/auth'
 
 const router = useRouter() // Manejo de rutas
@@ -89,6 +108,7 @@ const fileToUpload = ref(null) // Archivo a subir
 const fileIdToDownload = ref('') // ID del archivo a descargar
 const fileIdToValidate = ref('') // ID del archivo a validar
 const userFiles = ref([]) // Lista de archivos del usuario
+const fileMetadata = ref(null) // Metadata del archivo (método de firma y clave pública)
 
 const signed = ref(false)
 const method = ref('')
@@ -118,6 +138,15 @@ const logout = () => {
   // Limpiamos el sessionStorage y redirigimos al login
   sessionStorage.clear()
   router.push('/login')
+}
+
+// Función para obtener metadatos del archivo
+const fetchFileMetadata = async (filename) => {
+  try {
+    fileMetadata.value = await getFileMetadata(email.value, filename)
+  } catch (err) {
+    error.value = err.message
+  }
 }
 
 // Función para descargar los archivos de llaves
@@ -202,6 +231,10 @@ const downloadFiles = async () => {
 
   try {
     await downloadFile(email.value, fileIdToDownload.value)
+    success.value = true
+    // Metadata del archivo
+    await fetchFileMetadata(fileIdToDownload.value)
+
   } catch (err) {
     error.value = err.message
   }
