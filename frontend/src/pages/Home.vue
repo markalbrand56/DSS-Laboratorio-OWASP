@@ -28,6 +28,11 @@
         <div class="card">
           <h2>Upload File</h2>
           <input type="file" @change="handleFileUpload" />
+          <label>
+            <input type="checkbox" v-model="signed" /> Sign the file
+          </label>
+          <input type="text" v-model="method" placeholder="Method (optional)" />
+          <input type="text" v-model="privateKey" placeholder="Private Key (optional)" />
           <button @click="uploadFiles" :disabled="loadingUpload">
             {{ loadingUpload ? 'Uploading...' : 'Upload File' }}
           </button>
@@ -64,9 +69,15 @@ import { generateKeys } from '../api/auth'
 const router = useRouter() // Manejo de rutas
 const email = ref('') // Email del usuario guardado en el sessionStorage
 const token = ref('') // Token JWT del usuario guardado en el sessionStorage
+
 const fileToUpload = ref(null) // Archivo a subir
 const fileIdToDownload = ref('') // ID del archivo a descargar
 const fileIdToValidate = ref('') // ID del archivo a validar
+
+const signed = ref(false)
+const method = ref('')
+const privateKey = ref('')
+
 const loading = ref(false) // Estado de carga para la generación de llaves
 const loadingUpload = ref(false) // Estado de carga para la subida de archivos
 const error = ref(null) // Mensaje de error
@@ -127,17 +138,19 @@ const handleFileUpload = (event) => {
 
 // Función para subir el archivo
 const uploadFiles = async () => {
-  if (!fileToUpload.value) return
+  if (!fileToUpload.value) {
+    error.value = 'Please select a file to upload.'
+    return
+  }
 
   loadingUpload.value = true
-  error.value = null
-  success.value = false
 
   try {
-    const response = await uploadFile(fileToUpload.value)
-    success.value = true
+    await uploadFile(fileToUpload.value, signed.value, method.value, privateKey.value)
+    // Aquí puedes manejar el éxito, por ejemplo, mostrando un mensaje o limpiando el formulario
   } catch (err) {
-    error.value = err.message
+    // Manejo de error
+    console.error('Error uploading file:', err.message)
   } finally {
     loadingUpload.value = false
   }

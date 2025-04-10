@@ -1,10 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Subir un archivo (puede ser firmado o no)
-export async function uploadFile(file, signed = false) {
+export async function uploadFile(file, signed = false, method = null, privateKey = null) {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('signed', signed)
+    formData.append('sign', signed)
+    if (method) formData.append('method', method)
+    if (privateKey) formData.append('private_key', privateKey)
 
     const response = await fetch(`${API_BASE_URL}/file/upload`, {
         method: 'POST',
@@ -21,6 +23,7 @@ export async function uploadFile(file, signed = false) {
 
     return await response.json()
 }
+
 
 // Descargar un archivo
 export async function downloadFile(fileId) {
