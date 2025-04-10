@@ -9,31 +9,29 @@
       <!-- Card Welcome -->
       <Welcome :email="email" :token="token" />
 
-      <!-- Grouped Cards (Generate Keys, Upload, Download, Validate, Files) -->
+      <!-- Grouped Cards -->
       <div class="card-group">
-        <!-- Card Generate Keys -->
         <GenerateKeys :loading="loading" @generate="generateNewKeys" />
 
-        <!-- Card Upload File -->
         <FileUpload
             :loading="loadingUpload"
             @upload="({ file, signed: s, method: m, privateKey: k }) => {
-              fileToUpload = file;
-              signed = s;
-              method = m;
-              privateKey = k;
-              uploadFiles();
-            }"
+            fileToUpload = file;
+            signed = s;
+            method = m;
+            privateKey = k;
+            uploadFiles();
+          }"
         />
 
-        <FileDownload :loading="loadingDownload" @download="downloadFile" />
+        <FileDownload :loading="loadingDownload" @download="downloadFiles" />
 
         <VerifySignature :loading="loadingVerify" @verify="verifySignature" />
 
         <AllFiles :files="userFiles" :loading="loadingFiles" @refresh="fetchUserFiles" />
       </div>
 
-        <!-- Card File Metadata -->
+      <!-- Metadata -->
       <div class="card" v-if="fileMetadata">
         <h2>File Metadata</h2>
         <p><strong>Methods of Signature:</strong> {{ fileMetadata.metodos_firma.join(', ') }}</p>
@@ -41,12 +39,11 @@
           <div v-for="(key, method) in fileMetadata.llaves_publicas" :key="method">
             <h3>{{ method.toUpperCase() }} Public Key</h3>
             <pre>{{ key }}</pre>
-            <button @click="downloadPublicKey(key, method)">Download Public Key</button>
+            <button @click="downloadKey(key, `${method}_public_key.pem`)">Download Public Key</button>
           </div>
         </div>
       </div>
 
-      <!-- Error and Success Messages -->
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">Operation completed successfully!</p>
     </main>
@@ -54,10 +51,17 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {downloadFile, getFileMetadata, getUserFiles, uploadFile, verifyFileSignature,} from '../api/files'
-import {generateKeys} from '../api/auth'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  downloadFile,
+  getFileMetadata,
+  getUserFiles,
+  uploadFile,
+  verifyFileSignature
+} from '../api/files'
+import { generateKeys } from '../api/auth'
+
 import Welcome from "../components/Welcome.vue";
 import GenerateKeys from "../components/GenerateKeys.vue";
 import FileUpload from "../components/FileUpload.vue";
@@ -65,43 +69,33 @@ import FileDownload from "../components/FileDownload.vue";
 import VerifySignature from "../components/VerifySignature.vue";
 import AllFiles from "../components/AllFiles.vue";
 
-const router = useRouter() // Manejo de rutas
-const email = ref('') // Email del usuario guardado en el sessionStorage
-const token = ref('') // Token JWT del usuario guardado en el sessionStorage
+// Router y usuario
+const router = useRouter()
+const email = ref('')
+const token = ref('')
 
-const fileToUpload = ref(null) // Archivo a subir
-const fileIdToDownload = ref('') // ID del archivo a descargar
-const fileEmailToDownload = ref('') // Email del usuario que subió el archivo
-const fileIdToValidate = ref('') // ID del archivo a validar
-const userFiles = ref([]) // Lista de archivos del usuario
-const fileMetadata = ref(null) // Metadata del archivo (método de firma y clave pública)
-
-const signed = ref(false)
-const method = ref('')
-const privateKey = ref('')
-
-const loading = ref(false) // Estado de carga para la generación de llaves
-const loadingUpload = ref(false) // Estado de carga para la subida de archivos
-const error = ref(null) // Mensaje de error
-const success = ref(false) // Mensaje de éxito
-
-// src/components/Home.vue
-const verificationEmail = ref('') // Email del propietario
-const publicKey = ref('') // Clave pública proporcionada por el usuario
-const algorithm = ref('rsa') // Algoritmo seleccionado (RSA o ECC)
-const fileVerification = ref(null) // Archivo a verificar
-
-const loadingVerification = ref(false) // Estado de carga para la verificación de la firma
-const errorVerification = ref(null) // Mensaje de error en la verificación de la firma
-const successVerification = ref('') // Mensaje de éxito en la verificación
+// Estados globales
+const error = ref(null)
+const success = ref(false)
+const loading = ref(false)
+const loadingUpload = ref(false)
+const loadingDownload = ref(false)
+const loadingVerify = ref(false)
 const loadingFiles = ref(false)
-const loadingDownload = ref(false) // Estado de carga para la descarga de archivos
-const loadingVerify = ref(false) // Estado de carga para la verificación de la firma
 
+// Archivos
+let fileToUpload = null
+let fileIdToDownload = ref('')
+let fileEmailToDownload = ref('')
+let signed = false
+let method = ''
+let privateKey = ''
 
+const userFiles = ref([])
+const fileMetadata = ref(null)
 
+// Sesión
 onMounted(() => {
-  // Verificamos si el usuario está autenticado
   const storedToken = sessionStorage.getItem('jwt_token')
   const storedEmail = sessionStorage.getItem('email')
 
@@ -114,58 +108,12 @@ onMounted(() => {
   }
 })
 
-// Función para cerrar sesión
 const logout = () => {
-  // Limpiamos el sessionStorage y redirigimos al login
   sessionStorage.clear()
   router.push('/login')
 }
 
-// Función para manejar el archivo a verificar
-const handleFileVerification = (event) => {
-  fileVerification.value = event.target.files[0]
-}
-
-// Función para verificar la firma del archivo
-const verifySignature = async () => {
-  if (!fileVerification.value || !publicKey.value || !verificationEmail.value) {
-    errorVerification.value = 'Please provide all required fields (file, public key, and email).';
-    return;
-  }
-
-  loadingVerification.value = true
-  errorVerification.value = null
-  successVerification.value = ''
-
-  try {
-    const response = await verifyFileSignature(fileVerification.value, verificationEmail.value, publicKey.value, algorithm.value);
-    successVerification.value = response.message; // Mostrar el mensaje de éxito de la respuesta
-  } catch (err) {
-    errorVerification.value = err.message; // Mostrar el mensaje de error si la verificación falla
-  } finally {
-    loadingVerification.value = false
-  }
-}
-
-// Función para obtener metadatos del archivo
-const fetchFileMetadata = async (filename) => {
-  try {
-    fileMetadata.value = await getFileMetadata(fileEmailToDownload.value, filename)
-  } catch (err) {
-    error.value = err.message
-  }
-}
-
-// Función para descargar los archivos de llaves
-const downloadKey = (content, filename) => {
-  const blob = new Blob([content], { type: 'application/octet-stream' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = filename
-  link.click()
-}
-
-// Función para generar nuevas llaves
+// Generar nuevas llaves
 const generateNewKeys = async () => {
   loading.value = true
   success.value = false
@@ -173,7 +121,6 @@ const generateNewKeys = async () => {
 
   try {
     const res = await generateKeys()
-    // Descargamos las llaves privadas
     downloadKey(res.rsa_private_key, 'rsa_private_key.pem')
     downloadKey(res.ecc_private_key, 'ecc_private_key.pem')
     success.value = true
@@ -184,82 +131,92 @@ const generateNewKeys = async () => {
   }
 }
 
-const privateKeyFile = ref(null);
-
-// Función para manejar la carga de la clave privada
-const handlePrivateKeyUpload = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      privateKey.value = e.target.result; // Asigna el contenido del archivo al modelo `privateKey`
-    };
-    reader.readAsText(file);
-  }
-};
-
-
-// Función para manejar el archivo subido
-const handleFileUpload = (event) => {
-  fileToUpload.value = event.target.files[0]
-}
-
-// Función para subir el archivo
+// Subir archivo
 const uploadFiles = async () => {
-  if (!fileToUpload.value) {
-    error.value = 'Please select a file to upload.';
-    return;
+  if (!fileToUpload) {
+    error.value = 'Please select a file to upload.'
+    return
   }
 
-  loadingUpload.value = true;
-  error.value = null;
-  success.value = false;
+  loadingUpload.value = true
+  error.value = null
+  success.value = false
 
   try {
-    await uploadFile(fileToUpload.value, signed.value, method.value, privateKey.value);
-    success.value = 'File uploaded successfully!';
-    // Limpiar campos después de la subida
-    fileToUpload.value = null;
-    privateKey.value = '';
-    signed.value = false;
-    method.value = '';
-    // Actualizar lista de archivos después de subir uno
-    await fetchUserFiles();
+    await uploadFile(fileToUpload, signed, method, privateKey)
+    success.value = 'File uploaded successfully!'
+    fileToUpload = null
+    signed = false
+    method = ''
+    privateKey = ''
+    await fetchUserFiles()
   } catch (err) {
-    error.value = err.message;
+    error.value = err.message
   } finally {
     loadingUpload.value = false
   }
 }
 
-// Función para descargar el archivo
-const downloadFiles = async () => {
-  if (!fileIdToDownload.value) return
+// Descargar archivo
+const downloadFiles = async ({ fileId, email }) => {
+  fileIdToDownload.value = fileId
+  fileEmailToDownload.value = email
+
+  loadingDownload.value = true
+  error.value = null
+  success.value = false
 
   try {
-    await downloadFile(fileEmailToDownload.value, fileIdToDownload.value)
-    // Metadata del archivo
-    await fetchFileMetadata(fileIdToDownload.value)
-
+    await downloadFile(email, fileId)
+    await fetchFileMetadata(fileId)
     success.value = true
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loadingDownload.value = false
+  }
+}
+
+// Verificar firma
+const verifySignature = async ({ file, email, publicKey: pubKey, algorithm }) => {
+  if (!file || !email || !pubKey) {
+    error.value = 'Please provide all required fields.'
+    return
+  }
+
+  loadingVerify.value = true
+  error.value = null
+  success.value = false
+
+  try {
+    const res = await verifyFileSignature(file, email, pubKey, algorithm)
+    success.value = res.message
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loadingVerify.value = false
+  }
+}
+
+// Obtener metadata
+const fetchFileMetadata = async (filename) => {
+  try {
+    fileMetadata.value = await getFileMetadata(fileEmailToDownload.value, filename)
   } catch (err) {
     error.value = err.message
   }
 }
 
-// Función para validar la firma del archivo
-const validateSignature = async () => {
-  if (!fileIdToValidate.value) return
-
-  try {
-    await validateFileSignature(fileIdToValidate.value)
-    success.value = true
-  } catch (err) {
-    error.value = err.message
-  }
+// Descargar clave
+const downloadKey = (content, filename) => {
+  const blob = new Blob([content], { type: 'application/octet-stream' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = filename
+  link.click()
 }
 
-// Función para obtener los archivos del usuario
+// Obtener archivos del usuario
 const fetchUserFiles = async () => {
   loadingFiles.value = true
   try {
@@ -270,7 +227,6 @@ const fetchUserFiles = async () => {
     loadingFiles.value = false
   }
 }
-
 </script>
 
 <style scoped>
@@ -329,25 +285,10 @@ main {
   max-width: 500px;
   margin: 2rem 1rem;
   text-align: center;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
 .card h2 {
   margin-bottom: 1rem;
-}
-
-.jwt-preview {
-  display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: #eee;
-  border-radius: 6px;
-  font-family: monospace;
-  color: #333;
 }
 
 button {
@@ -376,7 +317,6 @@ button:hover {
   margin-top: 1rem;
 }
 
-/* Styles for the card group (grid layout) */
 .card-group {
   display: grid;
   grid-template-columns: repeat(2, minmax(280px, 1fr));
