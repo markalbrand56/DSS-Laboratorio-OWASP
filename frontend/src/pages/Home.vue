@@ -15,18 +15,16 @@
         <GenerateKeys />
 
         <!-- Card Upload File -->
-        <div class="card">
-          <h2>Upload File</h2>
-          <input type="file" @change="handleFileUpload" />
-          <label>
-            <input type="checkbox" v-model="signed" /> Sign the file
-          </label>
-          <input type="text" v-model="method" placeholder="Method (optional)" />
-          <input type="file" @change="handlePrivateKeyUpload" />
-          <button @click="uploadFiles" :disabled="loadingUpload">
-            {{ loadingUpload ? 'Uploading...' : 'Upload File' }}
-          </button>
-        </div>
+        <FileUpload
+            :loading="loadingUpload"
+            @upload="({ file, signed: s, method: m, privateKey: k }) => {
+              fileToUpload = file;
+              signed = s;
+              method = m;
+              privateKey = k;
+              uploadFiles();
+            }"
+        />
 
         <!-- Card Download File -->
         <div class="card">
@@ -108,6 +106,7 @@ import {
 import { generateKeys } from '../api/auth'
 import Welcome from "../components/Welcome.vue";
 import GenerateKeys from "../components/GenerateKeys.vue";
+import FileUpload from "../components/FileUpload.vue";
 
 const router = useRouter() // Manejo de rutas
 const email = ref('') // Email del usuario guardado en el sessionStorage
