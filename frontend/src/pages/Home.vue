@@ -26,30 +26,9 @@
             }"
         />
 
-        <!-- Card Download File -->
-        <div class="card">
-          <h2>Download File</h2>
-          <input v-model="fileEmailToDownload" type="text" placeholder="Enter email" />
-          <input v-model="fileIdToDownload" type="text" placeholder="Enter file ID" />
-          <button @click="downloadFiles">Download File</button>
-        </div>
+        <FileDownload :loading="loadingDownload" @download="downloadFile" />
 
-        <!-- Card Verificar Firma -->
-        <div class="card">
-          <h2>Verificar Firma de Archivo</h2>
-          <input type="file" @change="handleFileVerification" />
-          <input v-model="verificationEmail" type="email" placeholder="Correo del propietario" />
-          <input v-model="publicKey" type="text" placeholder="Clave pública" />
-          <select v-model="algorithm">
-            <option value="rsa">RSA</option>
-            <option value="ecc">ECC</option>
-          </select>
-          <button @click="verifySignature" :disabled="loadingVerification">
-            {{ loadingVerification ? 'Verificando...' : 'Verificar Firma' }}
-          </button>
-          <p v-if="errorVerification" class="error">{{ errorVerification }}</p>
-          <p v-if="successVerification" class="success">{{ successVerification }}</p>
-        </div>
+        <VerifySignature :loading="loadingVerify" @verify="verifySignature" />
 
         <!-- Card List User Files -->
         <div class="card">
@@ -107,6 +86,8 @@ import { generateKeys } from '../api/auth'
 import Welcome from "../components/Welcome.vue";
 import GenerateKeys from "../components/GenerateKeys.vue";
 import FileUpload from "../components/FileUpload.vue";
+import FileDownload from "../components/FileDownload.vue";
+import VerifySignature from "../components/VerifySignature.vue";
 
 const router = useRouter() // Manejo de rutas
 const email = ref('') // Email del usuario guardado en el sessionStorage
