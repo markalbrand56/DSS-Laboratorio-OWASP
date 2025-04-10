@@ -1,6 +1,7 @@
 .idea
 *.db
 /backend/FileSection
+*/.vite
 
 ### react template
 .DS_*
