@@ -1,26 +1,31 @@
 <template>
   <div class="home-page">
     <nav class="navbar">
-      <span class="logo">MyApp</span>
+      <span class="logo">Laboratorio 4</span>
       <button @click="logout">Logout</button>
     </nav>
 
     <main>
-      <div class="card">
+      <!-- Card Welcome -->
+      <div class="card welcome-card">
         <h1>Welcome!</h1>
         <p>You are logged in as <strong>{{ email }}</strong></p>
         <p>The first 15 characters of your JWT are:</p>
         <code class="jwt-preview">{{ token }}</code>
+      </div>
 
-        <!-- Botón para generar llaves -->
-        <div class="generate-keys">
+      <!-- Grouped Cards (Generate Keys, Upload, Download, Validate) -->
+      <div class="card-group">
+        <!-- Card Generate Keys -->
+        <div class="card">
+          <h2>Generate Keys</h2>
           <button @click="generateNewKeys" :disabled="loading">
             {{ loading ? 'Generating keys...' : 'Generate Keys' }}
           </button>
         </div>
 
-        <!-- Subir archivo -->
-        <div class="upload-file">
+        <!-- Card Upload File -->
+        <div class="card">
           <h2>Upload File</h2>
           <input type="file" @change="handleFileUpload" />
           <button @click="uploadFiles" :disabled="loadingUpload">
@@ -28,23 +33,24 @@
           </button>
         </div>
 
-        <!-- Descargar archivo -->
-        <div class="file-download">
+        <!-- Card Download File -->
+        <div class="card">
           <h2>Download File</h2>
           <input v-model="fileIdToDownload" type="text" placeholder="Enter file ID" />
           <button @click="downloadFiles">Download File</button>
         </div>
 
-        <!-- Validar firma -->
-        <div class="file-validation">
+        <!-- Card Validate Signature -->
+        <div class="card">
           <h2>Validate File Signature</h2>
           <input v-model="fileIdToValidate" type="text" placeholder="Enter file ID" />
           <button @click="validateSignature">Validate Signature</button>
         </div>
-
-        <p v-if="error" class="error">{{ error }}</p>
-        <p v-if="success" class="success">Operation completed successfully!</p>
       </div>
+
+      <!-- Error and Success Messages -->
+      <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="success" class="success">Operation completed successfully!</p>
     </main>
   </div>
 </template>
@@ -55,18 +61,19 @@ import { useRouter } from 'vue-router'
 import { uploadFile, downloadFile, validateFileSignature } from '../api/files'
 import { generateKeys } from '../api/auth'
 
-const router = useRouter()
-const email = ref('')
-const token = ref('')
-const fileToUpload = ref(null)
-const fileIdToDownload = ref('')
-const fileIdToValidate = ref('')
-const loading = ref(false)
-const loadingUpload = ref(false)
-const error = ref(null)
-const success = ref(false)
+const router = useRouter() // Manejo de rutas
+const email = ref('') // Email del usuario guardado en el sessionStorage
+const token = ref('') // Token JWT del usuario guardado en el sessionStorage
+const fileToUpload = ref(null) // Archivo a subir
+const fileIdToDownload = ref('') // ID del archivo a descargar
+const fileIdToValidate = ref('') // ID del archivo a validar
+const loading = ref(false) // Estado de carga para la generación de llaves
+const loadingUpload = ref(false) // Estado de carga para la subida de archivos
+const error = ref(null) // Mensaje de error
+const success = ref(false) // Mensaje de éxito
 
 onMounted(() => {
+  // Verificamos si el usuario está autenticado
   const storedToken = sessionStorage.getItem('jwt_token')
   const storedEmail = sessionStorage.getItem('email')
 
@@ -78,11 +85,14 @@ onMounted(() => {
   }
 })
 
+// Función para cerrar sesión
 const logout = () => {
+  // Limpiamos el sessionStorage y redirigimos al login
   sessionStorage.clear()
   router.push('/login')
 }
 
+// Función para descargar los archivos de llaves
 const downloadKey = (content, filename) => {
   const blob = new Blob([content], { type: 'application/octet-stream' })
   const link = document.createElement('a')
@@ -91,6 +101,7 @@ const downloadKey = (content, filename) => {
   link.click()
 }
 
+// Función para generar nuevas llaves
 const generateNewKeys = async () => {
   loading.value = true
   success.value = false
@@ -197,6 +208,7 @@ const validateSignature = async () => {
 main {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 2rem;
@@ -204,16 +216,17 @@ main {
 
 .card {
   background: white;
-  padding: 2rem 3rem;
+  padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  width: 85%;
   max-width: 500px;
+  margin: 2rem 1rem;
   text-align: center;
 }
 
-h1 {
+.card h2 {
   margin-bottom: 1rem;
-  color: #3f51b5;
 }
 
 .jwt-preview {
@@ -224,5 +237,41 @@ h1 {
   border-radius: 6px;
   font-family: monospace;
   color: #333;
+}
+
+button {
+  background: #3f51b5;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 1rem;
+}
+
+button:hover {
+  background: #303f9f;
+}
+
+.error {
+  color: red;
+  margin-top: 1rem;
+}
+
+.success {
+  color: green;
+  margin-top: 1rem;
+}
+
+/* Styles for the card group (grid layout) */
+.card-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 1100px;
+  margin: 1rem;
 }
 </style>
