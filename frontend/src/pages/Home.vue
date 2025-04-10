@@ -12,12 +12,7 @@
       <!-- Grouped Cards (Generate Keys, Upload, Download, Validate, Files) -->
       <div class="card-group">
         <!-- Card Generate Keys -->
-        <div class="card">
-          <h2>Generate Keys</h2>
-          <button @click="generateNewKeys" :disabled="loading">
-            {{ loading ? 'Generating keys...' : 'Generate Keys' }}
-          </button>
-        </div>
+        <GenerateKeys />
 
         <!-- Card Upload File -->
         <div class="card">
@@ -112,6 +107,7 @@ import {
 } from '../api/files'
 import { generateKeys } from '../api/auth'
 import Welcome from "../components/Welcome.vue";
+import GenerateKeys from "../components/GenerateKeys.vue";
 
 const router = useRouter() // Manejo de rutas
 const email = ref('') // Email del usuario guardado en el sessionStorage
