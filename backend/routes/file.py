@@ -1,7 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException, Query
+from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 from backend.controllers.auth import get_current_user
 from backend.controllers.FileServer import save_user_file
+from backend.database import db, User
 
 BASE_DIR = Path("FileSection")
 router = APIRouter()
@@ -26,7 +28,9 @@ async def upload_file(
 
 
 @router.get("/files")
-async def get_all_user_files():
+async def get_all_user_files(
+    user=Depends(get_current_user)
+):
     """
     Obtiene todos los archivos subidos por cada usuario,
     excluyendo los archivos de hash (.hash.txt) y firmas (.sig).
@@ -57,3 +61,51 @@ async def get_all_user_files():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener archivos: {e}")
+
+
+@router.get("/archivos/{user_email}/{filename}/descargar")
+async def descargar_archivo(
+    user_email: str,
+    filename: str,
+    current_user = Depends(get_current_user)
+):
+    file_path = BASE_DIR / user_email / filename
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+
+    return FileResponse(path=str(file_path), filename=filename, media_type="application/octet-stream")
+
+@router.get("/archivos/{user_email}/{filename}/metadata")
+async def obtener_metadata(
+    user_email: str,
+    filename: str,
+    current_user = Depends(get_current_user)
+):
+    file_path = BASE_DIR / user_email / filename
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+
+    rsa_signature = file_path.with_suffix(file_path.suffix + ".rsa.sig")
+    ecc_signature = file_path.with_suffix(file_path.suffix + ".ecc.sig")
+
+    with db.read() as session:
+        user = session.query(User).filter_by(email=user_email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        if rsa_signature.exists() and user.public_key_RSA:
+            metodo = "rsa"
+            public_key = user.public_key_RSA
+        elif ecc_signature.exists() and user.public_key_ECC:
+            metodo = "ecc"
+            public_key = user.public_key_ECC
+        else:
+            metodo = None
+            public_key = None
+
+    return {
+        "metodo_firma": metodo,
+        "llave_publica": public_key
+    }
