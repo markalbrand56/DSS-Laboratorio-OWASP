@@ -1,14 +1,15 @@
-from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException, Query
-from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
-from backend.controllers.auth import get_current_user
-from backend.controllers.FileServer import save_user_file
-from backend.database import db, User
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import serialization
+
 from cryptography.exceptions import InvalidSignature
-from typing import Optional
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding, ec
+from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException
+from fastapi.responses import FileResponse
+
+from backend.controllers.FileServer import save_user_file
+from backend.controllers.auth import get_current_user
+from backend.database import db, User
 
 BASE_DIR = Path("FileSection")
 router = APIRouter()
