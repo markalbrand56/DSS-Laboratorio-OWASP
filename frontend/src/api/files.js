@@ -26,24 +26,25 @@ export async function uploadFile(file, signed = false, method = null, privateKey
 
 
 // Descargar un archivo
-export async function downloadFile(fileId) {
-    const response = await fetch(`${API_BASE_URL}/file/${fileId}/download`, {
+export async function downloadFile(userEmail, filename) {
+    const response = await fetch(`${API_BASE_URL}/archivos/${userEmail}/${filename}/descargar`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
         },
-    })
+    });
 
     if (!response.ok) {
-        const err = await response.text()
-        throw new Error(err || 'Download failed')
+        const err = await response.text();
+        throw new Error(err || 'Failed to download file');
     }
 
-    const blob = await response.blob()
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = fileId
-    link.click()
+    // Creamos un enlace de descarga y lo activamos
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
 }
 
 // Validar la firma de un archivo
@@ -63,4 +64,19 @@ export async function validateFileSignature(fileId) {
     return await response.json()
 }
 
+// Obtener la lista de archivos de un usuario
+export async function getUserFiles() {
+    const response = await fetch(`${API_BASE_URL}/file/files`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
+        },
+    });
 
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || 'Failed to fetch files');
+    }
+
+    return await response.json();
+}

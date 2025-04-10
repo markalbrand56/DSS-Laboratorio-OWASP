@@ -14,7 +14,7 @@
         <code class="jwt-preview">{{ token }}</code>
       </div>
 
-      <!-- Grouped Cards (Generate Keys, Upload, Download, Validate) -->
+      <!-- Grouped Cards (Generate Keys, Upload, Download, Validate, Files) -->
       <div class="card-group">
         <!-- Card Generate Keys -->
         <div class="card">
@@ -51,6 +51,21 @@
           <input v-model="fileIdToValidate" type="text" placeholder="Enter file ID" />
           <button @click="validateSignature">Validate Signature</button>
         </div>
+
+        <!-- Card List User Files -->
+        <div class="card">
+          <h2>Your Files</h2>
+          <div v-if="userFiles.length">
+            <ul>
+              <li v-for="file in userFiles" :key="file">
+                {{ file }}
+              </li>
+            </ul>
+          </div>
+          <div v-else>
+            <p>No files uploaded yet.</p>
+          </div>
+        </div>
       </div>
 
       <!-- Error and Success Messages -->
@@ -63,7 +78,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { uploadFile, downloadFile, validateFileSignature } from '../api/files'
+import { uploadFile, downloadFile, validateFileSignature, getUserFiles } from '../api/files'
 import { generateKeys } from '../api/auth'
 
 const router = useRouter() // Manejo de rutas
@@ -73,6 +88,7 @@ const token = ref('') // Token JWT del usuario guardado en el sessionStorage
 const fileToUpload = ref(null) // Archivo a subir
 const fileIdToDownload = ref('') // ID del archivo a descargar
 const fileIdToValidate = ref('') // ID del archivo a validar
+const userFiles = ref([]) // Lista de archivos del usuario
 
 const signed = ref(false)
 const method = ref('')
@@ -93,6 +109,7 @@ onMounted(() => {
   } else {
     email.value = storedEmail
     token.value = storedToken.slice(0, 15)
+    fetchUserFiles()
   }
 })
 
@@ -170,20 +187,21 @@ const uploadFiles = async () => {
     privateKey.value = '';
     signed.value = false;
     method.value = '';
+    // Actualizar lista de archivos después de subir uno
+    await fetchUserFiles();
   } catch (err) {
     error.value = err.message;
   } finally {
-    loadingUpload.value = false;
+    loadingUpload.value = false
   }
-};
-
+}
 
 // Función para descargar el archivo
 const downloadFiles = async () => {
   if (!fileIdToDownload.value) return
 
   try {
-    await downloadFile(fileIdToDownload.value)
+    await downloadFile(email.value, fileIdToDownload.value)
   } catch (err) {
     error.value = err.message
   }
@@ -196,6 +214,17 @@ const validateSignature = async () => {
   try {
     await validateFileSignature(fileIdToValidate.value)
     success.value = true
+  } catch (err) {
+    error.value = err.message
+  }
+}
+
+// Función para obtener los archivos del usuario
+const fetchUserFiles = async () => {
+  try {
+    const listFiles = await getUserFiles()
+    console.log('listFiles', listFiles)
+    userFiles.value = listFiles.find(user => user.user === email.value).files
   } catch (err) {
     error.value = err.message
   }
