@@ -1,3 +1,4 @@
+// src/api/files.js
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Subir un archivo (puede ser firmado o no)
@@ -47,22 +48,30 @@ export async function downloadFile(userEmail, filename) {
     link.click();
 }
 
-// Validar la firma de un archivo
-export async function validateFileSignature(fileId) {
-    const response = await fetch(`${API_BASE_URL}/file/${fileId}/validate-signature`, {
-        method: 'GET',
+// Función para verificar la firma del archivo
+export async function verifyFileSignature(file, userEmail, publicKey, algorithm) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('user_email', userEmail);
+    formData.append('public_key', publicKey);
+    formData.append('algorithm', algorithm);
+
+    const response = await fetch(`${API_BASE_URL}/file/verificar`, {
+        method: 'POST',
         headers: {
             'Authorization': `Bearer ${sessionStorage.getItem('jwt_token')}`,
         },
-    })
+        body: formData,
+    });
 
     if (!response.ok) {
-        const err = await response.text()
-        throw new Error(err || 'Signature validation failed')
+        const err = await response.text();
+        throw new Error(err || 'File verification failed');
     }
 
-    return await response.json()
+    return await response.json();
 }
+
 
 // Obtener la lista de archivos de un usuario
 export async function getUserFiles() {

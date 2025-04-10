@@ -56,13 +56,12 @@
             <option value="rsa">RSA</option>
             <option value="ecc">ECC</option>
           </select>
-          <button @click="verifyFileSignature" :disabled="loadingVerification">
+          <button @click="verifySignature" :disabled="loadingVerification">
             {{ loadingVerification ? 'Verificando...' : 'Verificar Firma' }}
           </button>
           <p v-if="errorVerification" class="error">{{ errorVerification }}</p>
           <p v-if="successVerification" class="success">{{ successVerification }}</p>
         </div>
-
 
         <!-- Card List User Files -->
         <div class="card">
@@ -112,7 +111,7 @@ import { useRouter } from 'vue-router'
 import {
   uploadFile,
   downloadFile,
-  validateFileSignature,
+  verifyFileSignature,
   getUserFiles,
   getFileMetadata,
 } from '../api/files'
@@ -138,6 +137,16 @@ const loadingUpload = ref(false) // Estado de carga para la subida de archivos
 const error = ref(null) // Mensaje de error
 const success = ref(false) // Mensaje de éxito
 
+// src/components/Home.vue
+const verificationEmail = ref('') // Email del propietario
+const publicKey = ref('') // Clave pública proporcionada por el usuario
+const algorithm = ref('rsa') // Algoritmo seleccionado (RSA o ECC)
+const fileVerification = ref(null) // Archivo a verificar
+
+const loadingVerification = ref(false) // Estado de carga para la verificación de la firma
+const errorVerification = ref(null) // Mensaje de error en la verificación de la firma
+const successVerification = ref('') // Mensaje de éxito en la verificación
+
 onMounted(() => {
   // Verificamos si el usuario está autenticado
   const storedToken = sessionStorage.getItem('jwt_token')
@@ -157,6 +166,32 @@ const logout = () => {
   // Limpiamos el sessionStorage y redirigimos al login
   sessionStorage.clear()
   router.push('/login')
+}
+
+// Función para manejar el archivo a verificar
+const handleFileVerification = (event) => {
+  fileVerification.value = event.target.files[0]
+}
+
+// Función para verificar la firma del archivo
+const verifySignature = async () => {
+  if (!fileVerification.value || !publicKey.value || !verificationEmail.value) {
+    errorVerification.value = 'Please provide all required fields (file, public key, and email).';
+    return;
+  }
+
+  loadingVerification.value = true
+  errorVerification.value = null
+  successVerification.value = ''
+
+  try {
+    const response = await verifyFileSignature(fileVerification.value, verificationEmail.value, publicKey.value, algorithm.value);
+    successVerification.value = response.message; // Mostrar el mensaje de éxito de la respuesta
+  } catch (err) {
+    errorVerification.value = err.message; // Mostrar el mensaje de error si la verificación falla
+  } finally {
+    loadingVerification.value = false
+  }
 }
 
 // Función para obtener metadatos del archivo
