@@ -31,16 +31,26 @@
   - `users`: Almacena credenciales y claves públicas de los usuarios
   - `files`: Guarda archivos con sus respectivas firmas y claves públicas
 
-## 📍 Endpoints del Backend
+### 🔐 Rutas de Autenticación (`/auth`)
 
-| Endpoint                   | Método | Descripción                                                                       |
-| -------------------------- | ------ | --------------------------------------------------------------------------------- |
-| `/login`                   | POST   | Recibe email y password, valida credenciales y genera un JWT                      |
-| `/register`                | POST   | Recibe email y password, cifra la contraseña con SHA y guarda el usuario en la BD |
-| `/archivos`                | GET    | Devuelve la lista de archivos disponibles                                         |
-| `/archivos/{id}/descargar` | GET    | Descarga un archivo y devuelve la clave pública del propietario                   |
-| `/guardar`                 | POST   | Guarda un archivo firmado con RSA/ECC o sin firmar                                |
-| `/verificar`               | POST   | Recibe un archivo y su clave pública para verificar su autenticidad               |
+| Endpoint              | Método | Descripción                                                                 |
+|-----------------------|--------|-----------------------------------------------------------------------------|
+| `/auth/register`      | POST   | Registro de nuevos usuarios.                                               |
+| `/auth/login`         | POST   | Autenticación de usuarios. Retorna un JWT y el correo del usuario.         |
+| `/auth/generate-keys` | POST   | Genera un par de llaves RSA y ECC para el usuario autenticado.             |
+
+---
+
+### 📁 Rutas de Archivos (`/file`)
+
+| Endpoint                                                        | Método | Descripción                                                                                                                        |
+|------------------------------------------------------------------|--------|------------------------------------------------------------------------------------------------------------------------------------|
+| `/file/upload`                                                  | POST   | Sube un archivo a la carpeta del usuario. Puede firmarse con RSA/ECC si se especifica el método y la clave privada.               |
+| `/file/files`                                                   | GET    | Obtiene todos los archivos subidos por cada usuario, excluyendo los `.hash.txt` y `.sig`. Devuelve la información agrupada.       |
+| `/file/archivos/{user_email}/{file_name}/descargar`             | GET    | Descarga un archivo específico según el usuario que lo subió y el nombre del archivo.                                              |
+| `/file/archivos/{user_email}/{file_name}/metadata`              | GET    | Devuelve las claves públicas del archivo solicitado, identificando al usuario y al archivo.                                        |
+| `/file/verificar`                                               | POST   | Recibe un archivo y una clave pública para verificar su autenticidad o integridad (si no está firmado).                           |
+
 
 ## 🔄 Flujo de Trabajo
 
@@ -90,17 +100,16 @@
   uvicorn main:app --reload
 ```
 
-3. **Frontend (React)**
+3. **Frontend (Vue)**
 
 ```bash
   npm install
   npm start
 ```
 
-4. **Base de Datos (MongoDB)**
+4. **Base de Datos (SQLite)**
 
-- Configurar una instancia de MongoDB local o en la nube
-- Definir las variables de entorno para la conexión
+- Configurar una instancia de SQLite local
 
 ##
 
