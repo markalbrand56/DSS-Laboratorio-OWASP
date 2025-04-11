@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.padding import PSS, MGF1
 def save_hash(file_data: bytes, file_path: str, method: str) -> str:
     """Calcula el hash del archivo y lo guarda en un archivo txt con el método de firma."""
     file_hash = hashlib.sha256(file_data).hexdigest()
-    hash_file_path = f"{file_path}.{method}.hash.txt"  # Guardamos con el método de firma en el nombre
+    hash_file_path = f"{file_path}.{method}.hash"  # Guardamos con el método de firma en el nombre
     with open(hash_file_path, "w") as f:
         f.write(f"SHA256: {file_hash}\nFirmado con: {method}")
 
