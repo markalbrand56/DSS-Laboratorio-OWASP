@@ -2,6 +2,7 @@
   <div class="home-page">
     <nav class="navbar">
       <span class="logo">Laboratorio 4</span>
+      <button @click="goToAccount">Account</button>
       <button @click="logout">Logout</button>
     </nav>
 
@@ -102,6 +103,10 @@ onMounted(() => {
 const logout = () => {
   sessionStorage.clear()
   router.push('/login')
+}
+
+const goToAccount = () => {
+  router.push('/account')
 }
 
 // Generar nuevas llaves

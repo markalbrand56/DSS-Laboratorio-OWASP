@@ -14,6 +14,8 @@ class RegisterRequest(BaseModel):
     birthdate: date = Field(...)
 
 class UpdateUserRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
     name: Optional[str] = None
     surname: Optional[str] = None
     birthdate: Optional[str] = None

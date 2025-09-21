@@ -110,22 +110,6 @@ def login(email: str, password: str) -> tuple[str, str]:
         return user.email, token
 
 
-def update_user(email: str, name: str = None, surname: str = None, birthdate: str = None) -> User:
-    """Actualiza los datos del usuario."""
-    with db.write() as session:
-        user = session.query(User).filter_by(email=email).first()
-        if not user:
-            return None
-        if name is not None:
-            user.name = name
-        if surname is not None:
-            user.surname = surname
-        if birthdate is not None:
-            user.birthdate = birthdate
-        session.commit()
-        return user
-
-
 def delete_user(email: str) -> bool:
     """Elimina el usuario por email."""
     with db.write() as session:
@@ -135,6 +119,47 @@ def delete_user(email: str) -> bool:
         session.delete(user)
         session.commit()
         return True
+
+
+def update(
+        id: str = None,
+        email: str = None,
+        password: str = None,
+        name: str = None,
+        surname: str = None,
+        birthdate: str = None,
+) -> User:
+    """
+    Actualiza un usuario con la contraseña hasheada usando SHA-256.
+
+    :param id: Email original del usuario a actualizar.
+    :param email: Nuevo email del usuario (opcional).
+    :param password: Nueva contraseña del usuario (opcional).
+    :param name: Nuevo nombre del usuario (opcional).
+    :param surname: Nuevo apellido del usuario (opcional).
+    :param birthdate: Nueva fecha de nacimiento del usuario (opcional).
+    :return: Usuario actualizado o None si no se encuentra.
+    """
+    with db.write() as session:
+        user = session.query(User).filter_by(email=id).first()
+
+        if not user:
+            raise Exception("Usuario no encontrado")
+
+        if email is not None:
+            user.email = email
+        if password is not None:
+            hashed_password = _hash_password(password)
+            user.password = hashed_password
+        if name is not None:
+            user.name = name
+        if surname is not None:
+            user.surname = surname
+        if birthdate is not None:
+            user.birthdate = birthdate
+
+        return user
+
 
 if __name__ == "__main__":
     # Test the functions

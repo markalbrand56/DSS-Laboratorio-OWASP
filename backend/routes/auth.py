@@ -8,6 +8,7 @@ from controllers.auth import (
     login as login_controller,
     register as register_controller,
     get_current_user,
+    update as update_controller,
 )
 from controllers.keys import generate_rsa_keys, generate_ecc_keys
 
@@ -107,18 +108,19 @@ async def update_me(update: UpdateUserRequest, user: User = Depends(get_current_
     """
     Update current authenticated user's info.
     """
-    with db.write() as session:
-        user_in_db = session.query(User).filter_by(email=user.email).first()
-        if not user_in_db:
-            raise HTTPException(status_code=404, detail="User not found")
-        if update.name is not None:
-            user_in_db.name = update.name
-        if update.surname is not None:
-            user_in_db.surname = update.surname
-        if update.birthdate is not None:
-            user_in_db.birthdate = update.birthdate
-        session.commit()
-        return {"message": "User updated successfully"}
+    try:
+        update_controller(
+            id=user.email,
+            email=str(update.email),
+            password=update.password,
+            name=update.name,
+            surname=update.surname,
+            birthdate=update.birthdate
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error updating user: {e}")
+
+    return {"message": "User updated successfully"}
 
 @router.delete("/me")
 async def delete_me(user: User = Depends(get_current_user)):
@@ -130,5 +132,5 @@ async def delete_me(user: User = Depends(get_current_user)):
         if not user_in_db:
             raise HTTPException(status_code=404, detail="User not found")
         session.delete(user_in_db)
-        session.commit()
-        return {"message": "User deleted successfully"}
+
+    return {"message": "User deleted successfully"}
