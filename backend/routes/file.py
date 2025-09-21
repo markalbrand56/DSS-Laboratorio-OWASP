@@ -7,9 +7,9 @@ from cryptography.hazmat.primitives.asymmetric import padding, ec
 from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException
 from fastapi.responses import FileResponse
 
-from backend.controllers.FileServer import save_user_file
-from backend.controllers.auth import get_current_user
-from backend.database import db, User
+from controllers.FileServer import save_user_file
+from controllers.auth import get_current_user
+from database import db, User
 
 BASE_DIR = Path("FileSection")
 router = APIRouter()

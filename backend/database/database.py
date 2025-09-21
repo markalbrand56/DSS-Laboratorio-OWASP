@@ -2,7 +2,7 @@ import logging
 from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.database.schemas import Base
+from database.schemas import Base
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -77,7 +77,7 @@ class Database:
 
 if __name__ == "__main__":
     import os
-    from backend.database.schemas import User
+    from database.schemas import User
 
     current_directory = os.path.dirname(os.path.abspath(__file__))
     db = Database(f"{current_directory}/example.db")

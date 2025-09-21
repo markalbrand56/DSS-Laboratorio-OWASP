@@ -1,6 +1,6 @@
 import hashlib
-from backend.database import db, User
-from backend.controllers.keys import generate_rsa_keys, generate_ecc_keys
+from database import db, User
+from controllers.keys import generate_rsa_keys, generate_ecc_keys
 import jwt
 from jwt.exceptions import ExpiredSignatureError, DecodeError
 from fastapi import HTTPException, Header, Depends
