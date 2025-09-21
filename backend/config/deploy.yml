@@ -1,0 +1,31 @@
+# Name of your application. Used to uniquely configure containers.
+service: dss-lab-owasp-bck
+
+# Name of the container image.
+image: markalbrand/dss-lab-owasp-bck
+
+# Deploy to these servers.
+servers:
+  web:
+    - dss-lab-owasp-bck.albrand.tech
+
+proxy:
+  ssl: true
+  host: dss-lab-owasp-bck.albrand.tech
+  app_port: 8000
+
+registry:
+  username: markalbrand
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+  context: .
+
+aliases:
+  shell: app exec --interactive --reuse "bash"
+
+ssh:
+  user: deployer # Server user to connect as (default: root)
+  keys: ["~/.ssh/hetzner-access"] # List of SSH keys to use for authentication
