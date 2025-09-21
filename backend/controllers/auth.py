@@ -4,6 +4,7 @@ from controllers.keys import generate_rsa_keys, generate_ecc_keys
 import jwt
 from jwt.exceptions import ExpiredSignatureError, DecodeError
 from fastapi import HTTPException, Header, Depends
+from fastapi.security import OAuth2PasswordBearer
 
 SECRET_KEY = "clave_secreta_super_segura"
 
@@ -48,11 +49,11 @@ def verify_jwt(token: str) -> User:
         raise HTTPException(status_code=401, detail="Token inválido")
 
 
-def get_current_user(authorization: str = Header(...)) -> User:
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     """Obtiene el usuario actual a partir del JWT en el encabezado de autorización."""
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=400, detail="Formato de autorización inválido")
-    token = authorization.split(" ")[1]
     return verify_jwt(token)
 
 
@@ -108,6 +109,33 @@ def login(email: str, password: str) -> tuple[str, str]:
 
         token = _generate_jwt_token(user)
         return user.email, token
+
+
+def update_user(email: str, name: str = None, surname: str = None, birthdate: str = None) -> User:
+    """Actualiza los datos del usuario."""
+    with db.write() as session:
+        user = session.query(User).filter_by(email=email).first()
+        if not user:
+            return None
+        if name is not None:
+            user.name = name
+        if surname is not None:
+            user.surname = surname
+        if birthdate is not None:
+            user.birthdate = birthdate
+        session.commit()
+        return user
+
+
+def delete_user(email: str) -> bool:
+    """Elimina el usuario por email."""
+    with db.write() as session:
+        user = session.query(User).filter_by(email=email).first()
+        if not user:
+            return False
+        session.delete(user)
+        session.commit()
+        return True
 
 
 if __name__ == "__main__":

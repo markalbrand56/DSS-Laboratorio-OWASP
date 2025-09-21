@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
-from models.user import RegisterRequest, LoginRequest
+from models.user import RegisterRequest, LoginRequest, UpdateUserRequest  # You need to define this model
 from database import db, User
 from controllers.auth import (
     login as login_controller,
@@ -89,3 +89,46 @@ def generate_keys(user: User = Depends(get_current_user)):
             "rsa_private_key": rsa_private,
             "ecc_private_key": ecc_private
         }
+
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    """
+    Get current authenticated user's info.
+    """
+    return {
+        "email": user.email,
+        "name": user.name,
+        "surname": user.surname,
+        "birthdate": user.birthdate,
+    }
+
+@router.put("/me")
+async def update_me(update: UpdateUserRequest, user: User = Depends(get_current_user)):
+    """
+    Update current authenticated user's info.
+    """
+    with db.write() as session:
+        user_in_db = session.query(User).filter_by(email=user.email).first()
+        if not user_in_db:
+            raise HTTPException(status_code=404, detail="User not found")
+        if update.name is not None:
+            user_in_db.name = update.name
+        if update.surname is not None:
+            user_in_db.surname = update.surname
+        if update.birthdate is not None:
+            user_in_db.birthdate = update.birthdate
+        session.commit()
+        return {"message": "User updated successfully"}
+
+@router.delete("/me")
+async def delete_me(user: User = Depends(get_current_user)):
+    """
+    Delete current authenticated user.
+    """
+    with db.write() as session:
+        user_in_db = session.query(User).filter_by(email=user.email).first()
+        if not user_in_db:
+            raise HTTPException(status_code=404, detail="User not found")
+        session.delete(user_in_db)
+        session.commit()
+        return {"message": "User deleted successfully"}
