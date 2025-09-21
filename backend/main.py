@@ -22,6 +22,10 @@ app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 app.include_router(file_router, prefix="/file", tags=["file"])
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 if __name__ == "__main__":
     import uvicorn
 

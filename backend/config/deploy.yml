@@ -7,12 +7,16 @@ image: markalbrand/dss-lab-owasp-bck
 # Deploy to these servers.
 servers:
   web:
-    - dss-lab-owasp-bck.albrand.tech
+    - server1.albrand.tech
 
 proxy:
   ssl: true
   host: dss-lab-owasp-bck.albrand.tech
   app_port: 8000
+  healthcheck:
+    interval: 3
+    path: /health
+    timeout: 3
 
 registry:
   username: markalbrand

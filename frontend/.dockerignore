@@ -1,0 +1,11 @@
+# Archivos y directorios que no se necesitan en la imagen
+node_modules
+dist
+.dockerignore
+Dockerfile
+.git
+.gitignore
+.vscode
+.idea
+*.log
+.env
