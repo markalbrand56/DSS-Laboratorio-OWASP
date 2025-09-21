@@ -1,3 +1,14 @@
+.env
+*.env
+.env.*
+
+secrets
+*.secrets
+secrets.*
+
+.vscode/
+.idea
+
 # Logs
 logs
 *.log
