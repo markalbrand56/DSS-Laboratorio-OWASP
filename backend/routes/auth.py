@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
-from models.user import UserBase, LoginRequest
+from models.user import RegisterRequest, LoginRequest
 from database import db, User
 from controllers.auth import (
     login as login_controller,
@@ -34,12 +34,18 @@ async def login(login_request: LoginRequest) -> SuccessfulLoginResponse:
     )
 
 @router.post("/register", response_model=SuccessfulRegisterResponse, status_code=201)
-async def register(user: LoginRequest) -> SuccessfulRegisterResponse:
+async def register(user: RegisterRequest) -> SuccessfulRegisterResponse:
     """
     Registration endpoint to create a new user.
     """
     try:
-        register_controller(user.email, user.password)
+        register_controller(
+            email=str(user.email),
+            password=user.password,
+            name=user.name,
+            surname=user.surname,
+            birthdate=str(user.birthdate)
+        )
     except IntegrityError:
         raise HTTPException(
             status_code=409,

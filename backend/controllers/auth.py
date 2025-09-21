@@ -7,7 +7,6 @@ from fastapi import HTTPException, Header, Depends
 
 SECRET_KEY = "clave_secreta_super_segura"
 
-
 """
 ----------------------- JWT -----------------------
 
@@ -15,6 +14,7 @@ SECRET_KEY = "clave_secreta_super_segura"
 SECRET_KEY = "clave_secreta_super_segura"
 
 from datetime import datetime, timedelta, timezone
+
 
 def _generate_jwt_token(user: User) -> str:
     """Genera un JWT con el ID del usuario y una expiración de 1 hora."""
@@ -25,6 +25,7 @@ def _generate_jwt_token(user: User) -> str:
         "iat": int(now.timestamp()),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
 
 def verify_jwt(token: str) -> User:
     """Verifica el JWT y devuelve el usuario asociado."""
@@ -54,11 +55,13 @@ def get_current_user(authorization: str = Header(...)) -> User:
     token = authorization.split(" ")[1]
     return verify_jwt(token)
 
+
 """
 
 ----------------------- AUTH -----------------------
 
 """
+
 
 def _hash_password(password: str) -> str:
     """Hashea la contraseña con SHA-256."""
@@ -71,11 +74,24 @@ def get_user_by_email(email: str) -> User:
         return session.query(User).filter_by(email=email).first()
 
 
-def register(email: str, password: str) -> User:
+def register(
+        email: str,
+        password: str,
+        name: str = None,
+        surname: str = None,
+        birthdate: str = None,
+) -> User:
     """Crea un nuevo usuario con la contraseña hasheada usando SHA-256."""
     hashed_password = _hash_password(password)
+
     with db.write() as session:
-        user = User(email=email, password=hashed_password)
+        user = User(
+            email=email,
+            password=hashed_password,
+            name=name,
+            surname=surname,
+            birthdate=birthdate,
+        )
         session.add(user)
         session.commit()
         return user
@@ -92,8 +108,6 @@ def login(email: str, password: str) -> tuple[str, str]:
 
         token = _generate_jwt_token(user)
         return user.email, token
-
-
 
 
 if __name__ == "__main__":

@@ -11,6 +11,18 @@
           <label>Password</label>
           <input v-model="password" type="password" required />
         </div>
+        <div class="form-group">
+          <label>Name</label>
+          <input v-model="name" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>Surname</label>
+          <input v-model="surname" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>Birthdate</label>
+          <input v-model="birthdate" type="date" required />
+        </div>
         <button type="submit" :disabled="loading">
           {{ loading ? 'Registering...' : 'Register' }}
         </button>
@@ -32,18 +44,23 @@ import { useRouter } from 'vue-router'
 import { register } from '../api/auth'
 
 const router = useRouter()
-const email = ref('')
-const password = ref('')
 const loading = ref(false)
 const error = ref(null)
 const success = ref(false)
+
+// Form fields
+const email = ref('')
+const password = ref('')
+const name = ref('')
+const surname = ref('')
+const birthdate = ref('')
 
 const handleRegister = async () => {
   loading.value = true
   error.value = null
   success.value = false
   try {
-    await register(email.value, password.value)
+    await register(email.value, password.value, name.value, surname.value, birthdate.value)
     success.value = true
     setTimeout(() => router.push('/login'), 1500)
   } catch (err) {
