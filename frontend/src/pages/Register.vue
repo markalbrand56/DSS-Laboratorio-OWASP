@@ -13,11 +13,11 @@
         </div>
         <div class="form-group">
           <label>Name</label>
-          <input v-model="name" type="text" required />
+          <input v-model="name" type="text" required @input="sanitizeName" />
         </div>
         <div class="form-group">
           <label>Surname</label>
-          <input v-model="surname" type="text" required />
+          <input v-model="surname" type="text" required @input="sanitizeSurname" />
         </div>
         <div class="form-group">
           <label>Birthdate</label>
@@ -26,7 +26,7 @@
         <button type="submit" :disabled="loading">
           {{ loading ? 'Registering...' : 'Register' }}
         </button>
-        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="error" class="error" v-html="encodedError"></p>
         <p v-if="success" class="success">¡Registro exitoso! Redirigiendo...</p>
 
         <p class="login-link">
@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '../api/auth'
 
@@ -55,10 +55,44 @@ const name = ref('')
 const surname = ref('')
 const birthdate = ref('')
 
+// Regex: allow only letters, spaces, hyphens, apostrophes, and reject < >
+const validNameRegex = /^[^<>]*$/
+
+const sanitizeName = () => {
+  if (!validNameRegex.test(name.value)) {
+    name.value = name.value.replace(/[<>]/g, '')
+  }
+}
+const sanitizeSurname = () => {
+  if (!validNameRegex.test(surname.value)) {
+    surname.value = surname.value.replace(/[<>]/g, '')
+  }
+}
+
+// Output encoding for error messages (basic HTML escape)
+function escapeHtml(str) {
+  if (!str) return ''
+  return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+}
+
+const encodedError = computed(() => escapeHtml(error.value))
+
 const handleRegister = async () => {
   loading.value = true
   error.value = null
   success.value = false
+
+  // Input validation before sending to backend
+  if (!validNameRegex.test(name.value) || !validNameRegex.test(surname.value)) {
+    error.value = 'Name and surname cannot contain < or > characters.'
+    loading.value = false
+    return
+  }
+
   try {
     await register(email.value, password.value, name.value, surname.value, birthdate.value)
     success.value = true
