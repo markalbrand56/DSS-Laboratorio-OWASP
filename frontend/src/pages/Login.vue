@@ -46,7 +46,16 @@ const handleLogin = async () => {
     sessionStorage.setItem('email', res.email)
     router.push('/home')
   } catch (err) {
-    error.value = err.message
+    // Si la API devuelve status
+    console.log(err)
+    if (err.status === 429) {
+      error.value = 'Demasiados intentos fallidos. Intenta de nuevo más tarde.'
+      alert(error.value)
+    } else if (err.status === 401) {
+      error.value = 'Credenciales inválidas.'
+    } else {
+      error.value = 'Error al iniciar sesión. Intenta nuevamente.'
+    }
   } finally {
     loading.value = false
   }

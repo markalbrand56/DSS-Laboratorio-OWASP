@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 
 from models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
@@ -11,28 +11,85 @@ from controllers.auth import (
     update as update_controller,
 )
 from controllers.keys import generate_rsa_keys, generate_ecc_keys
+from database import redis_instance
 
 router = APIRouter()
 
-@router.post("/login", response_model=SuccessfulLoginResponse, status_code=200)
-async def login(login_request: LoginRequest) -> SuccessfulLoginResponse:
-    """
-    Login endpoint to authenticate users using query parameters.
+# Conexión a Redis
 
-    It returns a JWT token and the user's email if successful.
-    """
+MAX_ATTEMPTS = 5
+WINDOW_SECONDS = 5 * 60  # 15 minutos
+
+
+def get_client_ip(request: Request) -> str:
+    """Obtiene la IP real del cliente considerando cabeceras."""
+    x_forwarded_for = request.headers.get("X-Forwarded-For")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0].strip()
+    return request.client.host
+
+
+def is_rate_limited(ip: str, email: str) -> bool:
+    """Verifica si el cliente/email está bloqueado por demasiados intentos fallidos."""
+    ip_key = f"login:ip:{ip}"
+    email_key = f"login:email:{email}"
+
+    # Revisar si alguno superó el límite
+    ip_attempts = int(redis_instance.get(ip_key) or 0)
+    email_attempts = int(redis_instance.get(email_key) or 0)
+
+    return ip_attempts >= MAX_ATTEMPTS or email_attempts >= MAX_ATTEMPTS
+
+
+def register_failed_attempt(ip: str, email: str):
+    """Incrementa contadores en Redis con expiración."""
+    ip_key = f"login:ip:{ip}"
+    email_key = f"login:email:{email}"
+
+    # IP
+    pipe = redis_instance.pipeline()
+    pipe.incr(ip_key)
+    pipe.expire(ip_key, WINDOW_SECONDS)
+    # Email
+    pipe.incr(email_key)
+    pipe.expire(email_key, WINDOW_SECONDS)
+    pipe.execute()
+
+
+def reset_attempts(ip: str, email: str):
+    """Elimina contadores al autenticarse exitosamente."""
+    redis_instance.delete(f"login:ip:{ip}", f"login:email:{email}")
+
+
+@router.post("/login", response_model=SuccessfulLoginResponse, status_code=200)
+async def login(login_request: LoginRequest, request: Request) -> SuccessfulLoginResponse:
+    ip = get_client_ip(request)
+    email = login_request.email
+
+    if is_rate_limited(ip, email):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many failed login attempts. Please try again later."
+        )
+
     u, t = login_controller(login_request.email, login_request.password)
 
     if u and t:
+        # Login exitoso → resetea contadores
+        reset_attempts(ip, email)
         return SuccessfulLoginResponse(
             email=u,
             jwt_token=t
         )
 
+    # Intento fallido → registrar
+    register_failed_attempt(ip, email)
+
     raise HTTPException(
         status_code=401,
         detail="Invalid credentials",
     )
+
 
 @router.post("/register", response_model=SuccessfulRegisterResponse, status_code=201)
 async def register(user: RegisterRequest) -> SuccessfulRegisterResponse:
@@ -63,6 +120,7 @@ async def register(user: RegisterRequest) -> SuccessfulRegisterResponse:
         message="User created successfully",
     )
 
+
 @router.post("/generate-keys")
 def generate_keys(user: User = Depends(get_current_user)):
     """Genera un par de llaves RSA y ECC para el usuario autenticado."""
@@ -91,6 +149,7 @@ def generate_keys(user: User = Depends(get_current_user)):
             "ecc_private_key": ecc_private
         }
 
+
 @router.get("/me")
 async def get_me(user: User = Depends(get_current_user)):
     """
@@ -102,6 +161,7 @@ async def get_me(user: User = Depends(get_current_user)):
         "surname": user.surname,
         "birthdate": user.birthdate,
     }
+
 
 @router.put("/me")
 async def update_me(update: UpdateUserRequest, user: User = Depends(get_current_user)):
@@ -121,6 +181,7 @@ async def update_me(update: UpdateUserRequest, user: User = Depends(get_current_
         raise HTTPException(status_code=400, detail=f"Error updating user: {e}")
 
     return {"message": "User updated successfully"}
+
 
 @router.delete("/me")
 async def delete_me(user: User = Depends(get_current_user)):

@@ -11,8 +11,12 @@ export async function login(email, password) {
     })
 
     if (!response.ok) {
-        const err = await response.text()
-        throw new Error(err || 'Login failed')
+        const errText = await response.text()
+        // Attach status and body to the error
+        const error = new Error(errText || 'Login failed')
+        error.status = response.status
+        error.body = errText
+        throw error
     }
 
     return await response.json()
