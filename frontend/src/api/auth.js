@@ -1,5 +1,5 @@
 // src/api/auth.js
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dss-lab-owasp-bck.albrand.tech'
 
 export async function login(email, password) {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
