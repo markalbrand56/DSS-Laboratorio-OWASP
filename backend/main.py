@@ -27,7 +27,7 @@ app.include_router(file_router, prefix="/file", tags=["file"])
 async def add_security_headers(request: Request, call_next):
     response: Response = await call_next(request)
 
-    # 1. Strict-Transport-Security (solo útil si usas HTTPS en producción)
+    # 1. Strict-Transport-Security
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 
     # 2. X-Content-Type-Options
