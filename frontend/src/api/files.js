@@ -1,5 +1,5 @@
 // src/api/files.js
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dss-lab-owasp-bck.albrand.tech'
 
 // Subir un archivo (puede ser firmado o no)
 export async function uploadFile(file, signed = false, method = null, privateKey = null) {
