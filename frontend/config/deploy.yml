@@ -35,4 +35,4 @@ ssh:
   keys: ["~/.ssh/hetzner-access"] # List of SSH keys to use for authentication
 
 env:
-  VITE_API_URL: 'dss-lab-owasp-bck.albrand.tech'
+  VITE_API_URL: 'api'
