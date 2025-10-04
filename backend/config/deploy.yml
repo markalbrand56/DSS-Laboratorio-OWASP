@@ -33,3 +33,15 @@ aliases:
 ssh:
   user: deployer # Server user to connect as (default: root)
   keys: ["~/.ssh/hetzner-access"] # List of SSH keys to use for authentication
+
+accessories:
+  redis:
+    service: redis
+    image: redis:latest
+    roles:
+      - web
+    volumes:
+      - /var/lib/redis:/data
+
+env:
+  REDIS_HOST: redis

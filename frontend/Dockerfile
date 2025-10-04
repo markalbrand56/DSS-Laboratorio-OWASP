@@ -26,8 +26,8 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copiar los archivos compilados desde la etapa de build
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copiar una configuración custom de Nginx (opcional)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copiar una configuración custom de Nginx
+COPY config/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Exponer el puerto
 EXPOSE 80
