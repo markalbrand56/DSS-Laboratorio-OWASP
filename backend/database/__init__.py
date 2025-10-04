@@ -14,6 +14,8 @@ redis_instance = redis.Redis(
     decode_responses=True
 )
 
+redis_instance.flushall()
+
 __all__ = [
     "db",
     "User",
