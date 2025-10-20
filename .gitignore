@@ -3,6 +3,7 @@
 /backend/FileSection
 */.vite
 */temp
+*/reports
 
 ### react template
 .DS_*
