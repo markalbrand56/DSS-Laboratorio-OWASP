@@ -43,5 +43,44 @@ accessories:
     volumes:
       - /var/lib/redis:/data
 
+  # SonarQube's PostgreSQL database accessory
+  sonar-db:
+    image: postgres:17
+    roles:
+      - web
+    port: "5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: sonar
+        POSTGRES_PASSWORD: sonar
+        POSTGRES_DB: sonar
+    volumes:
+      - ./dss-lab-owasp-bck/sonar-db/data:/var/lib/postgresql/data
+
+  # SonarQube accessory
+  sonarqube:
+    image: sonarqube:community
+    roles:
+      - web
+    port: 9000:9000
+    proxy:
+      ssl: true
+      host: dss-sonarqube.albrand.tech
+      app_port: 9000
+      healthcheck:
+        interval: 3
+        path: /
+        timeout: 120
+    env:
+      clear:
+        SONAR_JDBC_URL: jdbc:postgresql://server1.albrand.tech:5432/sonar
+        SONAR_JDBC_USERNAME: sonar
+        SONAR_JDBC_PASSWORD: sonar
+        SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true" # Disables Elasticsearch checks, useful for lab/dev environments
+    volumes:
+      - ./dss-lab-owasp-bck/sonarqube/data:/opt/sonarqube/data
+      - ./dss-lab-owasp-bck/sonarqube/extensions:/opt/sonarqube/extensions
+      - ./dss-lab-owasp-bck/sonarqube/logs:/opt/sonarqube/logs
+
 env:
   REDIS_HOST: redis
