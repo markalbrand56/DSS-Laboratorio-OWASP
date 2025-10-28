@@ -4,9 +4,9 @@ Aplicación principal FastAPI para sistema de gestión de archivos con firmas di
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import auth_router, file_router
-from config.settings import ALLOWED_ORIGINS
-from utils.logging_config import setup_logger
+from backend.routes import auth_router, file_router
+from backend.config.settings import ALLOWED_ORIGINS
+from backend.utils.logging_config import setup_logger
 
 # Configurar logger de la aplicación
 app_logger = setup_logger("main")

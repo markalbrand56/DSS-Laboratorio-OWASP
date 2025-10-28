@@ -10,10 +10,10 @@ import jwt
 from jwt.exceptions import ExpiredSignatureError, DecodeError
 from fastapi import HTTPException, Header
 
-from database import db, User
-from controllers.keys import generate_rsa_keys, generate_ecc_keys
-from config.settings import SECRET_KEY, JWT_EXPIRATION_HOURS, JWT_ALGORITHM
-from utils.logging_config import auth_logger
+from backend.database import db, User
+from backend.controllers.keys import generate_rsa_keys, generate_ecc_keys
+from backend.config.settings import SECRET_KEY, JWT_EXPIRATION_HOURS, JWT_ALGORITHM
+from backend.utils.logging_config import auth_logger
 
 
 # ==================== JWT ====================

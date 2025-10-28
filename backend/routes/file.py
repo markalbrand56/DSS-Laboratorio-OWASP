@@ -12,10 +12,10 @@ from cryptography.hazmat.primitives.asymmetric import padding, ec
 from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException
 from fastapi.responses import FileResponse
 
-from controllers.FileServer import save_user_file
-from controllers.auth import get_current_user
-from database import db, User
-from utils.logging_config import file_logger
+from backend.controllers.FileServer import save_user_file
+from backend.controllers.auth import get_current_user
+from backend.database import db, User
+from backend.utils.logging_config import file_logger
 
 BASE_DIR = Path("FileSection")
 TEMP_DIR = Path("temp")

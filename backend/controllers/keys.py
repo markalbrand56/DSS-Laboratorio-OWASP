@@ -12,7 +12,7 @@ import aiofiles
 from pathlib import Path
 from typing import Tuple
 
-from utils.logging_config import security_logger
+from backend.utils.logging_config import security_logger
 
 
 async def save_hash(file_data: bytes, file_path: str, method: str = "sha256") -> str:

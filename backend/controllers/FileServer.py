@@ -8,12 +8,12 @@ from fastapi import UploadFile, HTTPException
 from cryptography.hazmat.primitives import serialization
 from typing import Dict, Optional
 
-from controllers.keys import (
+from backend.controllers.keys import (
     sign_file_with_rsa,
     sign_file_with_ecc,
     save_hash
 )
-from utils.logging_config import file_logger
+from backend.utils.logging_config import file_logger
 
 BASE_DIR = Path("FileSection")
 

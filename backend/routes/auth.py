@@ -4,17 +4,18 @@ Rutas de autenticación y gestión de usuarios.
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 
-from models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
-from models.user import RegisterRequest, LoginRequest, UpdateUserRequest
-from database import db, User, redis_instance
-from controllers.auth import (
+from backend.models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
+from backend.models.user import RegisterRequest, LoginRequest, UpdateUserRequest
+from backend.database import db, User, redis_instance
+from backend.controllers.auth import (
     login as login_controller,
     register as register_controller,
     get_current_user,
+    update as update_controller,
 )
-from controllers.keys import generate_rsa_keys, generate_ecc_keys
-from config.settings import MAX_LOGIN_ATTEMPTS, RATE_LIMIT_WINDOW_SECONDS
-from utils.logging_config import auth_logger
+from backend.controllers.keys import generate_rsa_keys, generate_ecc_keys
+from backend.config.settings import MAX_LOGIN_ATTEMPTS, RATE_LIMIT_WINDOW_SECONDS
+from backend.utils.logging_config import auth_logger
 
 router = APIRouter()
 
