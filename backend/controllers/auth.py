@@ -1,9 +1,10 @@
 import hashlib
-from database import db, User
-from controllers.keys import generate_rsa_keys, generate_ecc_keys
+
 import jwt
+from fastapi import HTTPException, Header
 from jwt.exceptions import ExpiredSignatureError, DecodeError
-from fastapi import HTTPException, Header, Depends
+
+from database import db, User
 
 SECRET_KEY = "clave_secreta_super_segura"
 
