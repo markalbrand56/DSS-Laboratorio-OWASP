@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
+
+from database import db, User
 from main import app  # Importa tu app principal de FastAPI
-from database import db, User, redis_instance as r
-from database.schemas import Base
 
 # Crear el cliente de prueba
 client = TestClient(app)
