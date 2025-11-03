@@ -47,7 +47,6 @@ const handleLogin = async () => {
     router.push('/home')
   } catch (err) {
     // Si la API devuelve status
-    console.log(err)
     if (err.status === 429) {
       error.value = 'Demasiados intentos fallidos. Intenta de nuevo más tarde.'
       alert(error.value)
