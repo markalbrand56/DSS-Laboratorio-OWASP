@@ -4,8 +4,6 @@ import shutil
 import io
 from fastapi.testclient import TestClient
 from main import app  # Importa tu app principal de FastAPI
-from database import db, User, redis_instance as r
-from database.schemas import Base
 from controllers.keys import generate_rsa_keys, generate_ecc_keys
 
 # --- Configuración del Cliente ---

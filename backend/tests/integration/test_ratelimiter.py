@@ -16,7 +16,6 @@ def clear_redis():
 
 def test_login_failed_attempts_blocked(clear_redis):
     email = "fake@example.com"
-    ip = "127.0.0.1"
 
     # Simula 5 intentos fallidos → deben devolver 401
     for _ in range(5):

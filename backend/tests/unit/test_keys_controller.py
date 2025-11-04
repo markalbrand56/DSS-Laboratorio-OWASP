@@ -1,7 +1,7 @@
 import os
 import tempfile
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import serialization
 import asyncio
 
 import controllers.keys as keys

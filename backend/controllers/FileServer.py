@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from fastapi import UploadFile, HTTPException
 from cryptography.hazmat.primitives import serialization

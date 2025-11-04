@@ -1,7 +1,6 @@
 import pytest
 from jose import jwt
 from fastapi import HTTPException
-from datetime import datetime, timedelta, timezone
 
 import controllers.auth as auth
 

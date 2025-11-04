@@ -12,6 +12,7 @@ dependencies = [
     "python-jose>=3.5.0",
     "python-multipart~=0.0.20",
     "redis>=6.4.0",
+    "ruff>=0.14.3",
     "sqlalchemy~=2.0.38",
     "uvicorn~=0.34.0",
 ]
