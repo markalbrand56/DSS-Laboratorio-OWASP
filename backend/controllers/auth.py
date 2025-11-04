@@ -70,11 +70,11 @@ def get_user_by_email(email: str) -> User:
 
 
 def register(
-        email: str,
-        password: str,
-        name: str = None,
-        surname: str = None,
-        birthdate: str = None,
+    email: str,
+    password: str,
+    name: str = None,
+    surname: str = None,
+    birthdate: str = None,
 ) -> User:
     """Crea un nuevo usuario con la contraseña hasheada usando SHA-256."""
     hashed_password = _hash_password(password)
@@ -117,12 +117,12 @@ def delete_user(email: str) -> bool:
 
 
 def update(
-        id: str = None,
-        email: str = None,
-        password: str = None,
-        name: str = None,
-        surname: str = None,
-        birthdate: str = None,
+    id: str = None,
+    email: str = None,
+    password: str = None,
+    name: str = None,
+    surname: str = None,
+    birthdate: str = None,
 ) -> User:
     """
     Actualiza un usuario con la contraseña hasheada usando SHA-256.

@@ -66,7 +66,9 @@ def test_sign_file_with_rsa_creates_signature_and_hash():
             f.write(b"hola mundo")
 
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        sig_path, hash_path = asyncio.run(keys.sign_file_with_rsa(file_path, private_key))
+        sig_path, hash_path = asyncio.run(
+            keys.sign_file_with_rsa(file_path, private_key)
+        )
 
         assert os.path.exists(sig_path)
         assert os.path.exists(hash_path)
@@ -84,7 +86,9 @@ def test_sign_file_with_ecc_creates_signature_and_hash():
             f.write(b"hola ecc")
 
         private_key = ec.generate_private_key(ec.SECP256R1())
-        sig_path, hash_path = asyncio.run(keys.sign_file_with_ecc(file_path, private_key))
+        sig_path, hash_path = asyncio.run(
+            keys.sign_file_with_ecc(file_path, private_key)
+        )
 
         assert os.path.exists(sig_path)
         assert os.path.exists(hash_path)

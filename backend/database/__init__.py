@@ -8,16 +8,9 @@ db = Database(f"{current_directory}/database.db")
 
 
 redis_instance = redis.Redis(
-    host=os.getenv("REDIS_HOST", "localhost"),
-    port=6379,
-    db=0,
-    decode_responses=True
+    host=os.getenv("REDIS_HOST", "localhost"), port=6379, db=0, decode_responses=True
 )
 
 redis_instance.flushall()
 
-__all__ = [
-    "db",
-    "User",
-    "redis_instance"
-]
+__all__ = ["db", "User", "redis_instance"]

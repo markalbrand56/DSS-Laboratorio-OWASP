@@ -114,13 +114,21 @@ def test_login_success(monkeypatch):
         class Q:
             def filter_by(self, **kwargs):
                 return self
-            def first(self): return user
+
+            def first(self):
+                return user
+
         return Q()
 
     class DummyDB:
-        def __enter__(self): return self
-        def __exit__(self, *a): pass
-        def query(self, _): return mock_query(_)
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+        def query(self, _):
+            return mock_query(_)
 
     monkeypatch.setattr(auth.db, "write", lambda: DummyDB())
 
@@ -132,13 +140,22 @@ def test_login_success(monkeypatch):
 
 def test_login_failure(monkeypatch):
     """Simula credenciales incorrectas."""
+
     class DummyDB:
-        def __enter__(self): return self
-        def __exit__(self, *a): pass
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
         def query(self, _):
             class Q:
-                def filter_by(self, **kwargs): return self
-                def first(self): return None
+                def filter_by(self, **kwargs):
+                    return self
+
+                def first(self):
+                    return None
+
             return Q()
 
     monkeypatch.setattr(auth.db, "write", lambda: DummyDB())

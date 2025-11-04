@@ -7,6 +7,7 @@ from database.schemas import Base
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 class Database:
     """Clase para la conexión a la base de datos SQLite."""
 
@@ -74,6 +75,7 @@ class Database:
             session.rollback()
         finally:
             session.close()
+
 
 if __name__ == "__main__":
     import os

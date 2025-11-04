@@ -22,13 +22,16 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(file_router, prefix="/file", tags=["file"])
 
+
 # --- Middleware de cabeceras de seguridad ---
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response: Response = await call_next(request)
 
     # 1. Strict-Transport-Security
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    response.headers["Strict-Transport-Security"] = (
+        "max-age=31536000; includeSubDomains; preload"
+    )
 
     # 2. X-Content-Type-Options
     response.headers["X-Content-Type-Options"] = "nosniff"

@@ -19,7 +19,7 @@ def auth_headers():
         "password": "password123",
         "name": "Test",
         "surname": "User",
-        "birthdate": "2000-01-01"
+        "birthdate": "2000-01-01",
     }
 
     # 1. Registrar
@@ -38,15 +38,19 @@ def auth_headers():
 
 # --- Pruebas de Integración de Auth ---
 
+
 def test_register_success():
     """Prueba el registro exitoso de un nuevo usuario."""
-    response = client.post("/auth/register", json={
-        "email": "newuser@example.com",
-        "password": "StrongPassword123",
-        "name": "New",
-        "surname": "User",
-        "birthdate": "1999-05-10"
-    })
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "newuser@example.com",
+            "password": "StrongPassword123",
+            "name": "New",
+            "surname": "User",
+            "birthdate": "1999-05-10",
+        },
+    )
     assert response.status_code == 201
     assert response.json()["email"] == "newuser@example.com"
     assert response.json()["message"] == "User created successfully"
@@ -54,26 +58,32 @@ def test_register_success():
 
 def test_register_user_already_exists(auth_headers):
     """Prueba que no se puede registrar un usuario con un email existente."""
-    response = client.post("/auth/register", json={
-        "email": "testuser@example.com",  # Este usuario ya existe por el fixture 'auth_headers'
-        "password": "password123",
-        "name": "Test",
-        "surname": "User",
-        "birthdate": "2000-01-01"
-    })
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "testuser@example.com",  # Este usuario ya existe por el fixture 'auth_headers'
+            "password": "password123",
+            "name": "Test",
+            "surname": "User",
+            "birthdate": "2000-01-01",
+        },
+    )
     assert response.status_code == 409
     assert "User already exists" in response.json()["detail"]
 
 
 def test_register_invalid_name():
     """Prueba la validación de Pydantic para caracteres HTML en el nombre."""
-    response = client.post("/auth/register", json={
-        "email": "baduser@example.com",
-        "password": "password123",
-        "name": "<script>alert(1)</script>",  # Nombre inválido
-        "surname": "User",
-        "birthdate": "2000-01-01"
-    })
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "baduser@example.com",
+            "password": "password123",
+            "name": "<script>alert(1)</script>",  # Nombre inválido
+            "surname": "User",
+            "birthdate": "2000-01-01",
+        },
+    )
     assert response.status_code == 422  # Error de validación de FastAPI
     assert "Field cannot contain '<' or '>' characters" in str(response.json())
 
@@ -94,7 +104,7 @@ def test_update_me(auth_headers):
         "password": "NewPassword456",
         "name": "Updated",
         "surname": "Name",
-        "birthdate": "2001-02-03"
+        "birthdate": "2001-02-03",
     }
     response = client.put("/auth/me", headers=auth_headers, json=update_data)
     assert response.status_code == 200
@@ -102,10 +112,10 @@ def test_update_me(auth_headers):
 
     # Verificar que los cambios se aplicaron
     # (Necesitamos un nuevo token ya que el email/payload del token anterior puede cambiar)
-    new_login_resp = client.post("/auth/login", json={
-        "email": "newemail@example.com",
-        "password": "NewPassword456"
-    })
+    new_login_resp = client.post(
+        "/auth/login",
+        json={"email": "newemail@example.com", "password": "NewPassword456"},
+    )
     new_token = new_login_resp.json()["jwt_token"]
     new_headers = {"Authorization": f"Bearer {new_token}"}
 

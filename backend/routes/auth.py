@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 
 from models.responses import SuccessfulLoginResponse, SuccessfulRegisterResponse
-from models.user import RegisterRequest, LoginRequest, UpdateUserRequest  # You need to define this model
+from models.user import (
+    RegisterRequest,
+    LoginRequest,
+    UpdateUserRequest,
+)  # You need to define this model
 from database import db, User
 from controllers.auth import (
     login as login_controller,
@@ -62,14 +66,16 @@ def reset_attempts(ip: str, email: str):
 
 
 @router.post("/login", response_model=SuccessfulLoginResponse, status_code=200)
-async def login(login_request: LoginRequest, request: Request) -> SuccessfulLoginResponse:
+async def login(
+    login_request: LoginRequest, request: Request
+) -> SuccessfulLoginResponse:
     ip = get_client_ip(request)
     email = login_request.email
 
     if is_rate_limited(ip, email):
         raise HTTPException(
             status_code=429,
-            detail="Too many failed login attempts. Please try again later."
+            detail="Too many failed login attempts. Please try again later.",
         )
 
     u, t = login_controller(login_request.email, login_request.password)
@@ -77,10 +83,7 @@ async def login(login_request: LoginRequest, request: Request) -> SuccessfulLogi
     if u and t:
         # Login exitoso → resetea contadores
         reset_attempts(ip, email)
-        return SuccessfulLoginResponse(
-            email=u,
-            jwt_token=t
-        )
+        return SuccessfulLoginResponse(email=u, jwt_token=t)
 
     # Intento fallido → registrar
     register_failed_attempt(ip, email)
@@ -102,7 +105,7 @@ async def register(user: RegisterRequest) -> SuccessfulRegisterResponse:
             password=user.password,
             name=user.name,
             surname=user.surname,
-            birthdate=str(user.birthdate)
+            birthdate=str(user.birthdate),
         )
     except IntegrityError:
         raise HTTPException(
@@ -146,7 +149,7 @@ def generate_keys(user: User = Depends(get_current_user)):
         return {
             "message": "Llaves generadas exitosamente.",
             "rsa_private_key": rsa_private,
-            "ecc_private_key": ecc_private
+            "ecc_private_key": ecc_private,
         }
 
 
@@ -175,7 +178,7 @@ async def update_me(update: UpdateUserRequest, user: User = Depends(get_current_
             password=update.password,
             name=update.name,
             surname=update.surname,
-            birthdate=update.birthdate
+            birthdate=update.birthdate,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error updating user: {e}")

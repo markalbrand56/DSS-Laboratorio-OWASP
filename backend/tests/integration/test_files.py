@@ -16,6 +16,7 @@ client = TestClient(app)
 
 # --- Fixtures ---
 
+
 @pytest.fixture(autouse=True)
 def setup_environment():
     """
@@ -37,6 +38,7 @@ def setup_environment():
     shutil.rmtree("./FileSection", ignore_errors=True)
     shutil.rmtree("./temp", ignore_errors=True)
 
+
 @pytest.fixture
 def auth_user():
     """
@@ -47,7 +49,7 @@ def auth_user():
         "password": "password123",
         "name": "File",
         "surname": "Tester",
-        "birthdate": "2000-01-01"
+        "birthdate": "2000-01-01",
     }
     # Usamos el 'client' global
     client.post("/auth/register", json=user_data)
@@ -77,28 +79,28 @@ def test_keys():
     ecc_priv, ecc_pub = generate_ecc_keys()
     return {
         "rsa": {"private": rsa_priv, "public": rsa_pub},
-        "ecc": {"private": ecc_priv, "public": ecc_pub}
+        "ecc": {"private": ecc_priv, "public": ecc_pub},
     }
 
 
 # --- Pruebas del Router de Archivos ---
 # NOTA: 'client' ya no se pasa como argumento a las funciones.
 
+
 def test_upload_file_no_sign(auth_headers, auth_user):
     """Prueba la subida de un archivo simple sin firmar."""
 
     # Simula un archivo en memoria
     file_content = b"Este es un archivo de prueba no firmado."
-    file_to_upload = {'file': ('test_unsigned.txt', io.BytesIO(file_content), 'text/plain')}
+    file_to_upload = {
+        "file": ("test_unsigned.txt", io.BytesIO(file_content), "text/plain")
+    }
 
     # Datos del formulario
-    form_data = {'sign': False}
+    form_data = {"sign": False}
 
     response = client.post(
-        "/file/upload",
-        headers=auth_headers,
-        files=file_to_upload,
-        data=form_data
+        "/file/upload", headers=auth_headers, files=file_to_upload, data=form_data
     )
 
     assert response.status_code == 200
@@ -113,20 +115,19 @@ def test_upload_file_with_rsa_sign(auth_headers, auth_user, test_keys):
     """Prueba la subida de un archivo firmado con RSA."""
 
     file_content = b"Este es un archivo firmado con RSA."
-    file_to_upload = {'file': ('test_signed_rsa.txt', io.BytesIO(file_content), 'text/plain')}
+    file_to_upload = {
+        "file": ("test_signed_rsa.txt", io.BytesIO(file_content), "text/plain")
+    }
 
     # Datos del formulario, incluyendo la clave privada
     form_data = {
-        'sign': True,
-        'method': 'rsa',
-        'private_key': test_keys["rsa"]["private"]
+        "sign": True,
+        "method": "rsa",
+        "private_key": test_keys["rsa"]["private"],
     }
 
     response = client.post(
-        "/file/upload",
-        headers=auth_headers,
-        files=file_to_upload,
-        data=form_data
+        "/file/upload", headers=auth_headers, files=file_to_upload, data=form_data
     )
 
     assert response.status_code == 200
@@ -144,19 +145,18 @@ def test_upload_file_with_ecc_sign(auth_headers, auth_user, test_keys):
     """Prueba la subida de un archivo firmado con ECC."""
 
     file_content = b"Este es un archivo firmado con ECC."
-    file_to_upload = {'file': ('test_signed_ecc.txt', io.BytesIO(file_content), 'text/plain')}
+    file_to_upload = {
+        "file": ("test_signed_ecc.txt", io.BytesIO(file_content), "text/plain")
+    }
 
     form_data = {
-        'sign': True,
-        'method': 'ecc',
-        'private_key': test_keys["ecc"]["private"]
+        "sign": True,
+        "method": "ecc",
+        "private_key": test_keys["ecc"]["private"],
     }
 
     response = client.post(
-        "/file/upload",
-        headers=auth_headers,
-        files=file_to_upload,
-        data=form_data
+        "/file/upload", headers=auth_headers, files=file_to_upload, data=form_data
     )
 
     assert response.status_code == 200
@@ -173,19 +173,16 @@ def test_upload_sign_missing_key(auth_headers):
     """Prueba que la subida firmada falle si no se provee la clave."""
 
     file_content = b"Este archivo fallara."
-    file_to_upload = {'file': ('fail.txt', io.BytesIO(file_content), 'text/plain')}
+    file_to_upload = {"file": ("fail.txt", io.BytesIO(file_content), "text/plain")}
 
     form_data = {
-        'sign': True,  # Pide firmar
-        'method': 'rsa'
+        "sign": True,  # Pide firmar
+        "method": "rsa",
         # No se incluye 'private_key'
     }
 
     response = client.post(
-        "/file/upload",
-        headers=auth_headers,
-        files=file_to_upload,
-        data=form_data
+        "/file/upload", headers=auth_headers, files=file_to_upload, data=form_data
     )
 
     assert response.status_code == 500
@@ -199,16 +196,23 @@ def test_get_all_user_files(auth_headers, auth_user, test_keys):
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': ('signed.txt', io.BytesIO(b"s"), 'text/plain')},
-        data={'sign': True, 'method': 'rsa', 'private_key': test_keys["rsa"]["private"]}
+        files={"file": ("signed.txt", io.BytesIO(b"s"), "text/plain")},
+        data={
+            "sign": True,
+            "method": "rsa",
+            "private_key": test_keys["rsa"]["private"],
+        },
     )
 
     # Subir un archivo no firmado (crea 2 archivos: .txt, .hash)
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': ('unsigned.txt', io.BytesIO(b"u"), 'text/plain')},
-        data={'sign': False, 'method': 'hash-only'}  # Asumimos que 'method' se usa para el .hash
+        files={"file": ("unsigned.txt", io.BytesIO(b"u"), "text/plain")},
+        data={
+            "sign": False,
+            "method": "hash-only",
+        },  # Asumimos que 'method' se usa para el .hash
     )
 
     # Llamar al endpoint /files
@@ -219,7 +223,9 @@ def test_get_all_user_files(auth_headers, auth_user, test_keys):
     assert isinstance(data, list)
 
     # Encontrar la entrada de nuestro usuario
-    user_files_data = next((item for item in data if item["user"] == auth_user["email"]), None)
+    user_files_data = next(
+        (item for item in data if item["user"] == auth_user["email"]), None
+    )
     assert user_files_data is not None
 
     # Verificar que SOLO los archivos base están en la lista
@@ -236,18 +242,20 @@ def test_download_file(auth_headers, auth_user):
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': ('download.txt', io.BytesIO(file_content), 'text/plain')},
-        data={'sign': False}
+        files={"file": ("download.txt", io.BytesIO(file_content), "text/plain")},
+        data={"sign": False},
     )
 
     response = client.get(
         f"/file/archivos/{auth_user['email']}/download.txt/descargar",
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
     assert response.content == file_content
-    assert response.headers["content-disposition"] == 'attachment; filename="download.txt"'
+    assert (
+        response.headers["content-disposition"] == 'attachment; filename="download.txt"'
+    )
 
 
 def test_get_metadata_signed_file(auth_headers, auth_user):
@@ -262,14 +270,14 @@ def test_get_metadata_signed_file(auth_headers, auth_user):
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': ('metadata_test.txt', io.BytesIO(b"meta"), 'text/plain')},
-        data={'sign': True, 'method': 'rsa', 'private_key': rsa_private_key}
+        files={"file": ("metadata_test.txt", io.BytesIO(b"meta"), "text/plain")},
+        data={"sign": True, "method": "rsa", "private_key": rsa_private_key},
     )
 
     # 3. Pedir la metadata
     response = client.get(
         f"/file/archivos/{auth_user['email']}/metadata_test.txt/metadata",
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -290,23 +298,24 @@ def test_verify_signature_valid_rsa(auth_headers, auth_user, test_keys):
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': (filename, io.BytesIO(file_content), 'text/plain')},
-        data={'sign': True, 'method': 'rsa', 'private_key': test_keys["rsa"]["private"]}
+        files={"file": (filename, io.BytesIO(file_content), "text/plain")},
+        data={
+            "sign": True,
+            "method": "rsa",
+            "private_key": test_keys["rsa"]["private"],
+        },
     )
 
     # 2. Verificar el archivo (enviando el mismo contenido y la llave pública)
-    files_to_verify = {'file': (filename, io.BytesIO(file_content), 'text/plain')}
+    files_to_verify = {"file": (filename, io.BytesIO(file_content), "text/plain")}
     form_data = {
-        'user_email': auth_user["email"],
-        'public_key': test_keys["rsa"]["public"],
-        'algorithm': 'rsa'
+        "user_email": auth_user["email"],
+        "public_key": test_keys["rsa"]["public"],
+        "algorithm": "rsa",
     }
 
     response = client.post(
-        "/file/verificar",
-        headers=auth_headers,
-        files=files_to_verify,
-        data=form_data
+        "/file/verificar", headers=auth_headers, files=files_to_verify, data=form_data
     )
 
     assert response.status_code == 200
@@ -324,23 +333,26 @@ def test_verify_signature_invalid_tampered_file(auth_headers, auth_user, test_ke
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': (filename, io.BytesIO(file_content_original), 'text/plain')},
-        data={'sign': True, 'method': 'rsa', 'private_key': test_keys["rsa"]["private"]}
+        files={"file": (filename, io.BytesIO(file_content_original), "text/plain")},
+        data={
+            "sign": True,
+            "method": "rsa",
+            "private_key": test_keys["rsa"]["private"],
+        },
     )
 
     # 2. Intentar verificar con el contenido alterado
-    files_to_verify = {'file': (filename, io.BytesIO(file_content_tampered), 'text/plain')}
+    files_to_verify = {
+        "file": (filename, io.BytesIO(file_content_tampered), "text/plain")
+    }
     form_data = {
-        'user_email': auth_user["email"],
-        'public_key': test_keys["rsa"]["public"],
-        'algorithm': 'rsa'
+        "user_email": auth_user["email"],
+        "public_key": test_keys["rsa"]["public"],
+        "algorithm": "rsa",
     }
 
     response = client.post(
-        "/file/verificar",
-        headers=auth_headers,
-        files=files_to_verify,
-        data=form_data
+        "/file/verificar", headers=auth_headers, files=files_to_verify, data=form_data
     )
 
     assert response.status_code == 400
@@ -357,28 +369,28 @@ def test_verify_signature_invalid_wrong_key(auth_headers, auth_user, test_keys):
     client.post(
         "/file/upload",
         headers=auth_headers,
-        files={'file': (filename, io.BytesIO(file_content), 'text/plain')},
-        data={'sign': True, 'method': 'rsa', 'private_key': test_keys["rsa"]["private"]}
+        files={"file": (filename, io.BytesIO(file_content), "text/plain")},
+        data={
+            "sign": True,
+            "method": "rsa",
+            "private_key": test_keys["rsa"]["private"],
+        },
     )
 
     # 2. Generar un par de llaves completamente diferente
     _, other_public_key = generate_rsa_keys()
 
     # 3. Intentar verificar con la llave pública incorrecta
-    files_to_verify = {'file': (filename, io.BytesIO(file_content), 'text/plain')}
+    files_to_verify = {"file": (filename, io.BytesIO(file_content), "text/plain")}
     form_data = {
-        'user_email': auth_user["email"],
-        'public_key': other_public_key,  # Llave incorrecta
-        'algorithm': 'rsa'
+        "user_email": auth_user["email"],
+        "public_key": other_public_key,  # Llave incorrecta
+        "algorithm": "rsa",
     }
 
     response = client.post(
-        "/file/verificar",
-        headers=auth_headers,
-        files=files_to_verify,
-        data=form_data
+        "/file/verificar", headers=auth_headers, files=files_to_verify, data=form_data
     )
 
     assert response.status_code == 400
     assert "La firma RSA no es válida" in response.json()["detail"]
-
