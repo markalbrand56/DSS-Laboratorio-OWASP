@@ -52,8 +52,9 @@ accessories:
     env:
       clear:
         POSTGRES_USER: sonar
-        POSTGRES_PASSWORD: sonar
         POSTGRES_DB: sonar
+      secret:
+        - POSTGRES_PASSWORD
     volumes:
       - ./dss-lab-owasp-bck/sonar-db/data:/var/lib/postgresql/data
 
@@ -75,8 +76,9 @@ accessories:
       clear:
         SONAR_JDBC_URL: jdbc:postgresql://server1.albrand.tech:5432/sonar
         SONAR_JDBC_USERNAME: sonar
-        SONAR_JDBC_PASSWORD: sonar
         SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true" # Disables Elasticsearch checks, useful for lab/dev environments
+      secret:
+        - SONAR_JDBC_PASSWORD
     volumes:
       - ./dss-lab-owasp-bck/sonarqube/data:/opt/sonarqube/data
       - ./dss-lab-owasp-bck/sonarqube/extensions:/opt/sonarqube/extensions
