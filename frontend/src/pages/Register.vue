@@ -4,24 +4,34 @@
       <h2>Register</h2>
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="email" type="email" required />
+          <label>
+            <input v-model="email" type="email" required />
+            Email
+          </label>
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input v-model="password" type="password" required />
+          <label>
+            <input v-model="password" type="password" required />
+            Password
+          </label>
         </div>
         <div class="form-group">
-          <label>Name</label>
-          <input v-model="name" type="text" required @input="sanitizeName" />
+          <label>
+            <input v-model="name" type="text" required @input="sanitizeName" />
+            Name
+          </label>
         </div>
         <div class="form-group">
-          <label>Surname</label>
-          <input v-model="surname" type="text" required @input="sanitizeSurname" />
+          <label>
+            <input v-model="surname" type="text" required @input="sanitizeSurname" />
+            Surname
+          </label>
         </div>
         <div class="form-group">
-          <label>Birthdate</label>
-          <input v-model="birthdate" type="date" required />
+          <label>
+            <input v-model="birthdate" type="date" required />
+            Birthdate
+          </label>
         </div>
         <button type="submit" :disabled="loading">
           {{ loading ? 'Registering...' : 'Register' }}

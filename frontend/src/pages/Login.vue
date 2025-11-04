@@ -4,12 +4,16 @@
       <h2>Login</h2>
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="email" type="email" required />
+          <label>
+            <input v-model="email" type="email" required />
+            Email
+          </label>
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input v-model="password" type="password" required />
+          <label>
+            <input v-model="password" type="password" required />
+            Password
+          </label>
         </div>
         <button type="submit" :disabled="loading">
           {{ loading ? 'Logging in...' : 'Login' }}

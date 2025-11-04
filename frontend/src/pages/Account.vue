@@ -91,24 +91,34 @@ const goToHome = () => {
       <h2>Account Profile</h2>
       <form v-if="!deleted" @submit.prevent="handleUpdate">
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="form.email" type="email" required :disabled="!editing" />
+          <label>
+            <input v-model="form.email" type="email" required :disabled="!editing" />
+            Email
+          </label>
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input v-model="form.password" type="password" :required="editing" :disabled="!editing" placeholder="Enter new password" />
+          <label>
+            <input v-model="form.password" type="password" :required="editing" :disabled="!editing" placeholder="Enter new password" />
+            Password
+          </label>
         </div>
         <div class="form-group">
-          <label>Name</label>
-          <input v-model="form.name" type="text" required :disabled="!editing" />
+          <label>
+            <input v-model="form.name" type="text" required :disabled="!editing" />
+            Name
+          </label>
         </div>
         <div class="form-group">
-          <label>Surname</label>
-          <input v-model="form.surname" type="text" required :disabled="!editing" />
+          <label>
+            <input v-model="form.surname" type="text" required :disabled="!editing" />
+            Surname
+          </label>
         </div>
         <div class="form-group">
-          <label>Birthdate</label>
-          <input v-model="form.birthdate" type="date" required :disabled="!editing" />
+          <label>
+            <input v-model="form.birthdate" type="date" required :disabled="!editing" />
+            Birthdate
+          </label>
         </div>
         <div v-if="editing">
           <button type="submit" :disabled="loading">
