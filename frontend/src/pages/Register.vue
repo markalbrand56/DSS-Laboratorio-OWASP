@@ -70,23 +70,23 @@ const validNameRegex = /^[^<>]*$/
 
 const sanitizeName = () => {
   if (!validNameRegex.test(name.value)) {
-    name.value = name.value.replace(/[<>]/g, '')
+    name.value = name.value.replaceAll(/[<>]/g, '')
   }
 }
 const sanitizeSurname = () => {
   if (!validNameRegex.test(surname.value)) {
-    surname.value = surname.value.replace(/[<>]/g, '')
+    surname.value = surname.value.replaceAll(/[<>]/g, '')
   }
 }
 
 // Output encoding for error messages (basic HTML escape)
 function escapeHtml(str) {
   if (!str) return ''
-  return str.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
+  return str.replaceAll(/&/g, '&amp;')
+            .replaceAll(/</g, '&lt;')
+            .replaceAll(/>/g, '&gt;')
+            .replaceAll(/"/g, '&quot;')
+            .replaceAll(/'/g, '&#39;')
 }
 
 const encodedError = computed(() => escapeHtml(error.value))

@@ -54,12 +54,11 @@ const onFileChange = (e) => {
   file.value = e.target.files[0]
 }
 
-const onPublicKeyChange = (e) => {
-  const reader = new FileReader()
-  reader.onload = (event) => {
-    publicKey.value = event.target.result
+const onPublicKeyChange = async (e) => {
+  const fileBlob = e.target.files[0]
+  if (fileBlob) {
+    publicKey.value = await fileBlob.text()
   }
-  reader.readAsText(e.target.files[0])
 }
 
 const onVerify = () => {

@@ -54,14 +54,10 @@ const onFileChange = (e) => {
   file.value = e.target.files[0]
 }
 
-const onPrivateKeyUpload = (e) => {
+const onPrivateKeyUpload = async (e) => {
   const fileInput = e.target.files[0]
   if (fileInput) {
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      privateKey.value = event.target.result
-    }
-    reader.readAsText(fileInput)
+    privateKey.value = await fileInput.text()
   }
 }
 
