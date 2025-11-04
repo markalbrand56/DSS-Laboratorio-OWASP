@@ -1,20 +1,14 @@
 import hashlib
 
-import jwt
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError
+import os
 from fastapi import HTTPException, Header
-from jwt.exceptions import ExpiredSignatureError, DecodeError
 
 from database import db, User
-
-SECRET_KEY = "clave_secreta_super_segura"
-
-"""
------------------------ JWT -----------------------
-
-"""
-SECRET_KEY = "clave_secreta_super_segura"
-
 from datetime import datetime, timedelta, timezone
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 
 
 def _generate_jwt_token(user: User) -> str:
@@ -45,8 +39,8 @@ def verify_jwt(token: str) -> User:
 
     except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado")
-    except DecodeError:
-        raise HTTPException(status_code=401, detail="Token inválido")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
 
 
 def get_current_user(authorization: str = Header(...)) -> User:

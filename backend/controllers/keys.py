@@ -1,10 +1,11 @@
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
 import hashlib
-from cryptography.hazmat.primitives import hashes as crypto_hashes
-from cryptography.hazmat.primitives.asymmetric import padding, rsa, ec
-from cryptography.hazmat.primitives.asymmetric.padding import PSS, MGF1
+
 import aiofiles
+from cryptography.hazmat.primitives import hashes as crypto_hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, ec
+from cryptography.hazmat.primitives.asymmetric.padding import PSS, MGF1
+
 
 async def save_hash(file_data: bytes, file_path: str, method: str) -> str:
     """Calcula el hash del archivo y lo guarda en un archivo txt con el método de firma."""

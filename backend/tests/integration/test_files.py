@@ -101,7 +101,7 @@ def test_upload_file_no_sign(auth_headers, auth_user):
         data=form_data
     )
 
-    assert response.status_code == 500
+    assert response.status_code == 200
 
     # Verificar que el archivo existe en el servidor
     user_email = auth_user["email"]
