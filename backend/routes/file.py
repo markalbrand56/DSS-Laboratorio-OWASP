@@ -165,12 +165,65 @@ async def verify_signature(file_path: str, public_key: str, signature: bytes, al
         raise HTTPException(status_code=500, detail=f"Error al verificar la firma: {str(e)}")
 
 
+async def _save_temp_file(file: UploadFile) -> Path:
+    """Guarda el archivo temporalmente y retorna su path."""
+    temp_file_path = Path("temp") / file.filename
+    temp_file_path.parent.mkdir(exist_ok=True)
+    
+    async with aiofiles.open(temp_file_path, "wb") as f:
+        content = await file.read()
+        await f.write(content)
+    
+    return temp_file_path
+
+
+async def _verify_with_signature(temp_file_path: Path, user_dir: Path, filename: str, 
+                                  public_key: str, algorithm: str) -> dict:
+    """Verifica el archivo usando firma digital."""
+    signature_path = user_dir / f"{filename}.{algorithm}.sig"
+    
+    if not signature_path.exists():
+        raise HTTPException(status_code=400, detail=f"Algoritmo de firma {algorithm} no disponible.")
+    
+    signature_bytes = signature_path.read_bytes()
+    is_valid = await verify_signature(str(temp_file_path), public_key, signature_bytes, algorithm)
+    
+    if is_valid:
+        return {"message": f"Archivo verificado con éxito usando {algorithm.upper()}."}
+    else:
+        raise HTTPException(status_code=400, detail=f"La firma {algorithm.upper()} no es válida.")
+
+
+async def _verify_with_hash(temp_file_path: Path, file_hash_path: Path) -> dict:
+    """Verifica la integridad del archivo usando hash."""
+    if not file_hash_path.exists():
+        raise HTTPException(status_code=400, 
+                          detail="Archivo no firmado y sin hash disponible para verificar su integridad.")
+    
+    async with aiofiles.open(file_hash_path, "r") as f:
+        stored_hash = (await f.read()).strip()
+
+    # Calcular el hash del archivo
+    file_hash = hashlib.sha256()
+    async with aiofiles.open(temp_file_path, "rb") as f:
+        while chunk := await f.read(4096):
+            file_hash.update(chunk)
+
+    calculated_hash = file_hash.hexdigest()
+
+    if stored_hash == calculated_hash:
+        return {"message": "El archivo no está firmado, pero su integridad ha sido verificada con éxito."}
+    else:
+        raise HTTPException(status_code=400, 
+                          detail="La integridad del archivo no coincide con el hash almacenado.")
+
+
 @router.post("/verificar")
 async def verificar_autenticidad(
-        file: UploadFile = File(...),  # Archivo a verificar
-        user_email: str = Form(...),  # Correo del propietario del archivo
-        public_key: str = Form(...),  # Clave pública del propietario
-        algorithm: str = Form(...)  # Algoritmo de firma ('rsa' o 'ecc')
+        file: UploadFile = File(...),
+        user_email: str = Form(...),
+        public_key: str = Form(...),
+        algorithm: str = Form(...)
 ):
     """
     Recibe un archivo y una clave pública para verificar su autenticidad.
@@ -178,58 +231,20 @@ async def verificar_autenticidad(
     Si el archivo no está firmado, se verifica la integridad de los datos con la clave pública proporcionada.
     """
     # Guardar el archivo temporalmente
-    temp_file_path = Path("temp") / file.filename
-    temp_file_path.parent.mkdir(exist_ok=True)
-    
-    async with aiofiles.open(temp_file_path, "wb") as f:
-        content = await file.read()
-        await f.write(content)
+    temp_file_path = await _save_temp_file(file)
 
     # Buscar el directorio del usuario
     user_dir = BASE_DIR / user_email
     if not user_dir.exists():
         raise HTTPException(status_code=404, detail="Directorio del usuario no encontrado")
 
-    # Buscar si el archivo tiene una firma asociada
-    signature_path = user_dir / (file.filename + ".rsa.sig")  # Firma RSA
-    ecc_signature_path = user_dir / (file.filename + ".ecc.sig")  # Firma ECC
-    file_hash_path = user_dir / (file.filename + ".hash")  # Hash del archivo
+    # Buscar archivos de firma y hash
+    signature_path = user_dir / f"{file.filename}.{algorithm}.sig"
+    file_hash_path = user_dir / f"{file.filename}.hash"
 
     # Verificar si el archivo tiene una firma
-    if signature_path.exists() or ecc_signature_path.exists():
-        if algorithm == "rsa" and signature_path.exists():
-            # Verificar firma RSA
-            if await verify_signature(str(temp_file_path), public_key, signature_path.read_bytes(), "rsa"):
-                return {"message": "Archivo verificado con éxito usando RSA."}
-            else:
-                raise HTTPException(status_code=400, detail="La firma RSA no es válida.")
-        elif algorithm == "ecc" and ecc_signature_path.exists():
-            # Verificar firma ECC
-            if await verify_signature(str(temp_file_path), public_key, ecc_signature_path.read_bytes(), "ecc"):
-                return {"message": "Archivo verificado con éxito usando ECC."}
-            else:
-                raise HTTPException(status_code=400, detail="La firma ECC no es válida.")
-        else:
-            raise HTTPException(status_code=400, detail="Algoritmo de firma no válido o no disponible.")
-
-    # Si el archivo no tiene firma, verificar la integridad usando el hash
-    if file_hash_path.exists():
-        async with aiofiles.open(file_hash_path, "r") as f:
-            stored_hash = (await f.read()).strip()
-
-        # Calcular el hash del archivo
-        file_hash = hashlib.sha256()
-        async with aiofiles.open(temp_file_path, "rb") as f:
-            while chunk := await f.read(4096):
-                file_hash.update(chunk)
-
-        calculated_hash = file_hash.hexdigest()
-
-        # Verificar la integridad
-        if stored_hash == calculated_hash:
-            return {"message": "El archivo no está firmado, pero su integridad ha sido verificada con éxito."}
-        else:
-            raise HTTPException(status_code=400, detail="La integridad del archivo no coincide con el hash almacenado.")
-
-    raise HTTPException(status_code=400,
-                        detail="Archivo no firmado y sin hash disponible para verificar su integridad.")
+    if signature_path.exists():
+        return await _verify_with_signature(temp_file_path, user_dir, file.filename, public_key, algorithm)
+    
+    # Si no tiene firma, verificar con hash
+    return await _verify_with_hash(temp_file_path, file_hash_path)

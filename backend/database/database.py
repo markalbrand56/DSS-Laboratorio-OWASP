@@ -18,10 +18,10 @@ class Database:
         """
         self.db_path = db_path
         self.engine = None
-        self.Session = None
+        self.session_factory = None
 
         self.connect()
-        self.Session = sessionmaker(bind=self.engine)
+        self.session_factory = sessionmaker(bind=self.engine)
         self.create_tables()
 
     def connect(self):
@@ -39,7 +39,7 @@ class Database:
 
         :return: Sesión de la base de datos
         """
-        return self.Session()
+        return self.session_factory()
 
     @contextmanager
     def write(self):

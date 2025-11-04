@@ -145,7 +145,7 @@ def update(
         user = session.query(User).filter_by(email=id).first()
 
         if not user:
-            raise Exception("Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
         if email is not None:
             user.email = email
