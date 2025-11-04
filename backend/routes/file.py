@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
@@ -6,6 +7,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding, ec
 from fastapi import APIRouter, UploadFile, File, Depends, Form, HTTPException
 from fastapi.responses import FileResponse
+import aiofiles
 
 from controllers.FileServer import save_user_file
 from controllers.auth import get_current_user
@@ -123,15 +125,15 @@ async def obtener_metadata(
         "llaves_publicas": public_keys
     }
 
-def verify_signature(file_path: str, public_key: str, signature: bytes, algorithm: str) -> bool:
+async def verify_signature(file_path: str, public_key: str, signature: bytes, algorithm: str) -> bool:
     """
     Verifica la firma de un archivo con la clave pública proporcionada.
     Dependiendo del algoritmo de firma, puede ser RSA o ECC.
     """
     print(public_key)
     try:
-        with open(file_path, "rb") as f:
-            file_data = f.read()
+        async with aiofiles.open(file_path, "rb") as f:
+            file_data = await f.read()
 
         public_key = serialization.load_pem_public_key(public_key.encode())
 
@@ -177,9 +179,11 @@ async def verificar_autenticidad(
     """
     # Guardar el archivo temporalmente
     temp_file_path = Path("temp") / file.filename
-    with open(temp_file_path, "wb") as f:
+    temp_file_path.parent.mkdir(exist_ok=True)
+    
+    async with aiofiles.open(temp_file_path, "wb") as f:
         content = await file.read()
-        f.write(content)
+        await f.write(content)
 
     # Buscar el directorio del usuario
     user_dir = BASE_DIR / user_email
@@ -195,13 +199,13 @@ async def verificar_autenticidad(
     if signature_path.exists() or ecc_signature_path.exists():
         if algorithm == "rsa" and signature_path.exists():
             # Verificar firma RSA
-            if verify_signature(str(temp_file_path), public_key, signature_path.read_bytes(), "rsa"):
+            if await verify_signature(str(temp_file_path), public_key, signature_path.read_bytes(), "rsa"):
                 return {"message": "Archivo verificado con éxito usando RSA."}
             else:
                 raise HTTPException(status_code=400, detail="La firma RSA no es válida.")
         elif algorithm == "ecc" and ecc_signature_path.exists():
             # Verificar firma ECC
-            if verify_signature(str(temp_file_path), public_key, ecc_signature_path.read_bytes(), "ecc"):
+            if await verify_signature(str(temp_file_path), public_key, ecc_signature_path.read_bytes(), "ecc"):
                 return {"message": "Archivo verificado con éxito usando ECC."}
             else:
                 raise HTTPException(status_code=400, detail="La firma ECC no es válida.")
@@ -210,14 +214,13 @@ async def verificar_autenticidad(
 
     # Si el archivo no tiene firma, verificar la integridad usando el hash
     if file_hash_path.exists():
-        with open(file_hash_path, "r") as f:
-            stored_hash = f.read().strip()
+        async with aiofiles.open(file_hash_path, "r") as f:
+            stored_hash = (await f.read()).strip()
 
         # Calcular el hash del archivo
-        import hashlib
         file_hash = hashlib.sha256()
-        with open(temp_file_path, "rb") as f:
-            while chunk := f.read(4096):
+        async with aiofiles.open(temp_file_path, "rb") as f:
+            while chunk := await f.read(4096):
                 file_hash.update(chunk)
 
         calculated_hash = file_hash.hexdigest()

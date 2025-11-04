@@ -7,6 +7,7 @@ from controllers.keys import (
     sign_file_with_ecc,
     save_hash
 )
+import aiofiles
 
 BASE_DIR = Path("FileSection")
 
@@ -29,18 +30,18 @@ async def save_user_file(
     file_path = user_dir / file.filename
 
     try:
-        with open(file_path, "wb") as f:
+        async with aiofiles.open(file_path, "wb") as f:
             content = await file.read()
-            f.write(content)
+            await f.write(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al guardar archivo: {e}")
 
     try:
-        with open(file_path, "rb") as f:
-            file_data = f.read()
+        async with aiofiles.open(file_path, "rb") as f:
+            file_data = await f.read()
 
         #Generar el hash del archivo
-        hash_path = save_hash(file_data, str(file_path), method) if method else save_hash(file_data, str(file_path))
+        hash_path = await save_hash(file_data, str(file_path), method) if method else await save_hash(file_data, str(file_path), "sha256")
 
         response = {
             "message": "Archivo subido exitosamente",
@@ -60,10 +61,10 @@ async def save_user_file(
                 raise HTTPException(status_code=400, detail=f"Error al cargar la clave privada: {e}")
 
             if method == "rsa":
-                signature_path, _ = sign_file_with_rsa(str(file_path), key)
+                signature_path, _ = await sign_file_with_rsa(str(file_path), key)
                 response["rsa_signature"] = signature_path
             elif method == "ecc":
-                signature_path, _ = sign_file_with_ecc(str(file_path), key)
+                signature_path, _ = await sign_file_with_ecc(str(file_path), key)
                 response["ecc_signature"] = signature_path
             else:
                 raise HTTPException(status_code=400, detail="Método de firma inválido. Usa 'rsa' o 'ecc'.")
