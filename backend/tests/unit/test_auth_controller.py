@@ -121,12 +121,15 @@ def test_login_success(monkeypatch):
 
     class DummyDB:
         def __enter__(self):
+            """Simula contexto de base de datos."""
             return self
 
         def __exit__(self, *a):
+            """Cerrar contexto."""
             pass
 
         def query(self, _):
+            """Simula consulta de usuario."""
             return mock_query(_)
 
     monkeypatch.setattr(auth.db, "write", lambda: DummyDB())
@@ -142,12 +145,15 @@ def test_login_failure(monkeypatch):
 
     class DummyDB:
         def __enter__(self):
+            """Simula contexto de base de datos."""
             return self
 
         def __exit__(self, *a):
+            """Cerrar contexto."""
             pass
 
         def query(self, _):
+            """Simula consulta de usuario que no existe."""
             class Q:
                 def filter_by(self, **kwargs):
                     return self
